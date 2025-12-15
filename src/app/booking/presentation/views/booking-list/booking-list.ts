@@ -20,7 +20,8 @@ import { BookingConfirmationModal } from '../booking-confirmation-modal/booking-
 import { UnlockMethodSelectionModal } from '../unlock-method-selection-modal/unlock-method-selection-modal';
 import { BookingFilterService } from '../../../application/booking-filter.service';
 import { BookingFilter } from '../../../domain/model/booking-filter.model';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 interface BookingView {
   id: string;
@@ -71,67 +72,96 @@ export class BookingListComponent implements OnInit {
   loadBookings(): void {
     this.isLoading = true;
 
-    // Load from localStorage first
-    const localBookings = this.bookingStorage.getBookings();
+    const localBookings = Array.isArray(this.bookingStorage.getBookings())
+      ? this.bookingStorage.getBookings()
+      : [];
 
-    // Also try to load from API
     forkJoin({
-      bookings: this.bookingsApi.getAll(),
-      vehicles: this.vehiclesApi.getAll(),
-      locations: this.locationsApi.getAll()
+      bookings: this.bookingsApi.getAll().pipe(
+        catchError(error => {
+          console.error('Error loading bookings from API:', error);
+          return of([]);
+        })
+      ),
+      vehicles: this.vehiclesApi.getAll().pipe(
+        catchError(error => {
+          console.error('Error loading vehicles from API:', error);
+          return of([]);
+        })
+      ),
+      locations: this.locationsApi.getAll().pipe(
+        catchError(error => {
+          console.error('Error loading locations from API:', error);
+          return of([]);
+        })
+      )
     }).subscribe({
       next: ({ bookings, vehicles, locations }) => {
-        // Merge API bookings with local bookings
-        const allBookings = [...localBookings, ...bookings];
+        try {
+          const bookingsArray = Array.isArray(bookings) ? bookings : [];
+          const vehiclesArray = Array.isArray(vehicles) ? vehicles : [];
+          const locationsArray = Array.isArray(locations) ? locations : [];
 
-        // Remove duplicates (prefer local version)
-        const uniqueBookings = Array.from(
-          new Map(allBookings.map(b => [b.id, b])).values()
-        );
+          const allBookings = [...localBookings, ...bookingsArray];
 
-        this.bookings = uniqueBookings.map(booking => {
-          const vehicle = vehicles.find(v => v.id === booking.vehicleId);
-          const startLocation = locations.find(l => l.id === booking.startLocationId);
-          const endLocation = locations.find(l => l.id === booking.endLocationId);
+          const uniqueBookings = Array.from(
+            new Map(allBookings.map(b => [b.id, b])).values()
+          );
 
-          return {
-            id: booking.id,
-            vehicleId: booking.vehicleId,
-            vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
-            startLocationName: startLocation?.name || 'Unknown',
-            endLocationName: endLocation?.name || 'Unknown',
-            startDate: new Date(booking.startDate),
-            duration: booking.duration,
-            finalCost: booking.finalCost,
-            status: booking.status
-          };
-        });
-        this.applyFilters();
-        this.isLoading = false;
+          this.bookings = uniqueBookings.map(booking => {
+            const vehicle = vehiclesArray.find(v => v.id === booking.vehicleId);
+            const startLocation = locationsArray.find(l => l.id === booking.startLocationId);
+            const endLocation = locationsArray.find(l => l.id === booking.endLocationId);
+
+            return {
+              id: booking.id,
+              vehicleId: booking.vehicleId,
+              vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
+              startLocationName: startLocation?.name || 'Unknown',
+              endLocationName: endLocation?.name || 'Unknown',
+              startDate: new Date(booking.startDate),
+              duration: booking.duration,
+              finalCost: booking.finalCost,
+              status: booking.status
+            };
+          });
+          this.applyFilters();
+        } catch (error) {
+          console.error('Error processing bookings data:', error);
+          this.loadFromLocalStorageOnly();
+        } finally {
+          this.isLoading = false;
+        }
       },
       error: (error) => {
-        console.error('Error loading bookings from API:', error);
-        // Fallback to localStorage only
+        console.error('Error in forkJoin:', error);
         this.loadFromLocalStorageOnly();
       }
     });
   }
 
   private loadFromLocalStorageOnly(): void {
-    const localBookings = this.bookingStorage.getBookings();
-    this.bookings = localBookings.map(booking => ({
-      id: booking.id,
-      vehicleId: booking.vehicleId,
-      vehicleName: 'Vehicle',
-      startLocationName: 'Start Location',
-      endLocationName: 'End Location',
-      startDate: new Date(booking.startDate),
-      duration: booking.duration,
-      finalCost: booking.finalCost,
-      status: booking.status
-    }));
-    this.applyFilters();
-    this.isLoading = false;
+    try {
+      const localBookings = this.bookingStorage.getBookings();
+      this.bookings = Array.isArray(localBookings) ? localBookings.map(booking => ({
+        id: booking.id,
+        vehicleId: booking.vehicleId,
+        vehicleName: 'Vehicle',
+        startLocationName: 'Start Location',
+        endLocationName: 'End Location',
+        startDate: new Date(booking.startDate),
+        duration: booking.duration,
+        finalCost: booking.finalCost,
+        status: booking.status
+      })) : [];
+      this.applyFilters();
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      this.bookings = [];
+      this.filteredBookings = [];
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   applyFilters(): void {
@@ -174,9 +204,7 @@ export class BookingListComponent implements OnInit {
       return;
     }
 
-    // Show confirmation dialog
     const message = this.translate.instant('booking.confirmCancelMessage');
-    const confirmText = this.translate.instant('common.confirm');
 
     if (confirm(message)) {
       // Update in localStorage

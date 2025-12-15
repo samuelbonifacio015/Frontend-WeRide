@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { LocationResponse } from './locations-response';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { LocationResponse, LocationsListResponse } from './locations-response';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -11,7 +12,21 @@ export class LocationsApiEndpoint {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<LocationResponse[]> {
-    return this.http.get<LocationResponse[]>(this.baseUrl);
+    return this.http.get<LocationResponse[] | LocationsListResponse>(this.baseUrl).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return response;
+        }
+        if (response && typeof response === 'object' && 'locations' in response) {
+          return (response as LocationsListResponse).locations || [];
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching locations:', error);
+        return of([]);
+      })
+    );
   }
 
   create(location: Omit<LocationResponse, 'id'>): Observable<LocationResponse> {

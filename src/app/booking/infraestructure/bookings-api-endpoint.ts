@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { BookingResponse } from './bookings-response';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { BookingResponse, BookingsListResponse } from './bookings-response';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -10,9 +11,22 @@ export class BookingsApiEndpoint {
 
   constructor(private http: HttpClient) {}
 
-  // Obtener todas las reservas
   getAll(): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(this.baseUrl);
+    return this.http.get<BookingResponse[] | BookingsListResponse>(this.baseUrl).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return response;
+        }
+        if (response && typeof response === 'object' && 'bookings' in response) {
+          return (response as BookingsListResponse).bookings || [];
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching bookings:', error);
+        return of([]);
+      })
+    );
   }
 
   // Crear una nueva reserva

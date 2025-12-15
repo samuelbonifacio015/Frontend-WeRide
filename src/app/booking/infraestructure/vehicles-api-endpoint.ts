@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { VehicleResponse, VehiclesListResponse } from './vehicle-response';
 import { environment } from '../../../environments/environment';
 
@@ -11,7 +12,21 @@ export class VehiclesApiEndpoint {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<VehicleResponse[]> {
-    return this.http.get<VehicleResponse[]>(this.baseUrl);
+    return this.http.get<VehicleResponse[] | VehiclesListResponse>(this.baseUrl).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return response;
+        }
+        if (response && typeof response === 'object' && 'vehicles' in response) {
+          return (response as VehiclesListResponse).vehicles || [];
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching vehicles:', error);
+        return of([]);
+      })
+    );
   }
 
   create(vehicle: Omit<VehicleResponse, 'id'>): Observable<VehicleResponse> {
