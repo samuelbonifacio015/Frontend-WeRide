@@ -130,8 +130,8 @@ export class BookingFormComponent implements OnInit {
     const payload: any = {
       userId: '1',
       vehicleId: this.selectedVehicle,
-      startLocationId: 'loc-A',
-      endLocationId: 'loc-B',
+      startLocationId: '1',
+      endLocationId: '4',
       reservedAt: new Date().toISOString(),
       startDate: startDateTime.toISOString(),
       endDate: new Date(startDateTime.getTime() + (this.duration * 60000)).toISOString(),
@@ -151,19 +151,39 @@ export class BookingFormComponent implements OnInit {
 
     this.bookingsApi.create(payload).subscribe({
       next: (response) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:152',message:'POST response received',data:{response,responseType:typeof response,isArray:Array.isArray(response),hasId:'id' in response,hasBookingId:'bookingId' in response,keys:Object.keys(response || {})},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
 
         const newBookingEntity = this.mapApiResponseToBookingEntity(response);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:156',message:'Mapped booking entity',data:{mappedEntity:newBookingEntity,hasId:'id' in newBookingEntity,entityId:newBookingEntity?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
         this.bookingStorage.saveBooking(newBookingEntity);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:159',message:'Saved to localStorage',data:{savedId:newBookingEntity?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+
         this.bookingStore.addBooking(newBookingEntity);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:162',message:'Added to BookingStore',data:{addedId:newBookingEntity?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
 
         this.showSuccessMessage('booking.createSuccess');
         this.showSummary = true;
 
         setTimeout(async () =>{ // <--- HACEMOS EL CALLBACK ASÍNCRONO
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:168',message:'Navigating to booking list',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           await this.router.navigate(['/booking/list']); // <--- USAMOS AWAIT
         }, 2000);
       },
       error: (err) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:172',message:'POST error',data:{error:err?.message,status:err?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.error('Error creando reserva:', err);
         this.showErrorMessage('booking.createError');
       }

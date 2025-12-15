@@ -31,7 +31,28 @@ export class BookingsApiEndpoint {
 
   // Crear una nueva reserva
   create(booking: Omit<BookingResponse, 'id'>): Observable<BookingResponse> {
-    return this.http.post<BookingResponse>(this.baseUrl, booking);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:33',message:'POST request sent',data:{payload:booking,baseUrl:this.baseUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
+    return this.http.post<BookingResponse>(this.baseUrl, booking).pipe(
+      map(response => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:36',message:'POST response received in endpoint',data:{response,responseType:typeof response,hasId:'id' in response,hasBookingId:'bookingId' in response,keys:Object.keys(response || {})},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        if (response && 'bookingId' in response && !('id' in response)) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:39',message:'Normalizing bookingId to id',data:{bookingId:(response as any).bookingId},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
+        }
+        return response;
+      }),
+      catchError(error => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:45',message:'POST error in endpoint',data:{error:error?.error,status:error?.status,message:error?.message,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
+        throw error;
+      })
+    );
   }
 
   // Obtener una reserva por ID

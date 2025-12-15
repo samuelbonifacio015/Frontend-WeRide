@@ -66,6 +66,9 @@ export class BookingListComponent implements OnInit {
   currentFilter: BookingFilter = this.filterService.getDefaultFilter();
 
   ngOnInit(): void {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:68',message:'Component initialized, loading bookings',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     this.loadBookings();
   }
 
@@ -97,12 +100,18 @@ export class BookingListComponent implements OnInit {
       )
     }).subscribe({
       next: ({ bookings, vehicles, locations }) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:99',message:'ForkJoin completed',data:{bookingsCount:Array.isArray(bookings)?bookings.length:'not-array',localBookingsCount:localBookings.length,vehiclesCount:Array.isArray(vehicles)?vehicles.length:'not-array',locationsCount:Array.isArray(locations)?locations.length:'not-array'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         try {
           const bookingsArray = Array.isArray(bookings) ? bookings : [];
           const vehiclesArray = Array.isArray(vehicles) ? vehicles : [];
           const locationsArray = Array.isArray(locations) ? locations : [];
 
           const allBookings = [...localBookings, ...bookingsArray];
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:105',message:'Merged bookings',data:{allBookingsCount:allBookings.length,bookingsArrayCount:bookingsArray.length,localBookingsCount:localBookings.length,firstBookingId:allBookings[0]?.id,firstBookingKeys:allBookings[0]?Object.keys(allBookings[0]):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
 
           const uniqueBookings = Array.from(
             new Map(allBookings.map(b => [b.id, b])).values()
@@ -113,7 +122,7 @@ export class BookingListComponent implements OnInit {
             const startLocation = locationsArray.find(l => l.id === booking.startLocationId);
             const endLocation = locationsArray.find(l => l.id === booking.endLocationId);
 
-            return {
+            const bookingView = {
               id: booking.id,
               vehicleId: booking.vehicleId,
               vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
@@ -124,7 +133,16 @@ export class BookingListComponent implements OnInit {
               finalCost: booking.finalCost,
               status: booking.status
             };
+            // #region agent log
+            if (uniqueBookings.indexOf(booking) === 0) {
+              fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:111',message:'First booking view mapped',data:{bookingView,originalBooking:booking,hasVehicle:!!vehicle},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            }
+            // #endregion
+            return bookingView;
           });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:127',message:'Bookings array populated',data:{bookingsCount:this.bookings.length,firstBookingId:this.bookings[0]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           this.applyFilters();
         } catch (error) {
           console.error('Error processing bookings data:', error);
