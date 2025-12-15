@@ -23,7 +23,8 @@ export class UserStore {
     this.loadingSubject.next(true);
     this.userApiEndpoint.getAll().pipe(
       tap(users => {
-        this.usersSubject.next(users);
+        const usersArray = Array.isArray(users) ? users : [];
+        this.usersSubject.next(usersArray);
         this.loadingSubject.next(false);
       }),
       catchError(error => {
@@ -62,36 +63,42 @@ export class UserStore {
     this.selectedUserSubject.next(user);
   }
 
-  createUser(user: User): Observable<User> {
+  createUser(user: User): Observable<User | null> {
     return this.userApiEndpoint.create(user)
       .pipe(
         tap(newUser => {
-          const currentUsers = this.usersSubject.getValue();
-          this.usersSubject.next([...currentUsers, newUser]);
-        })
-      );
-  }
-
-  updateUser(id: number, user: User): Observable<User> {
-    return this.userApiEndpoint.update(id, user)
-      .pipe(
-        tap(updatedUser => {
-          const currentUsers = this.usersSubject.value;
-          const index = currentUsers.findIndex(u => u.id === id);
-          if (index !== -1) {
-            currentUsers[index] = updatedUser;
-            this.usersSubject.next([...currentUsers]);
+          if (newUser) {
+            const currentUsers = this.usersSubject.getValue();
+            this.usersSubject.next([...currentUsers, newUser]);
           }
         })
       );
   }
 
-  deleteUser(id: number): Observable<void> {
+  updateUser(id: number, user: User): Observable<User | null> {
+    return this.userApiEndpoint.update(id, user)
+      .pipe(
+        tap(updatedUser => {
+          if (updatedUser) {
+            const currentUsers = this.usersSubject.value;
+            const index = currentUsers.findIndex(u => u.id === id);
+            if (index !== -1) {
+              currentUsers[index] = updatedUser;
+              this.usersSubject.next([...currentUsers]);
+            }
+          }
+        })
+      );
+  }
+
+  deleteUser(id: number): Observable<boolean> {
     return this.userApiEndpoint.delete(id)
       .pipe(
-        tap(() => {
-          const currentUsers = this.usersSubject.value;
-          this.usersSubject.next(currentUsers.filter(u => u.id !== id));
+        tap(success => {
+          if (success) {
+            const currentUsers = this.usersSubject.value;
+            this.usersSubject.next(currentUsers.filter(u => u.id !== id));
+          }
         })
       );
   }

@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { MatIcon } from '@angular/material/icon';
 import { UserStore } from '../../../application/user.store';
 import { TripsApiEndpoint } from '../../../../trip/infrastructure/trips-api-endpoint';
@@ -22,18 +23,28 @@ export class UserHistoryCard implements OnInit {
   private readonly stateService = inject(UserSettingsStateService);
 
   user$ = this.userStore.getGuestUser$();
-  trips$: Observable<any[]> = new Observable(observer => observer.next([]));
-  bookings$: Observable<any[]> = new Observable(observer => observer.next([]));
+  trips$: Observable<any[]> = of([]);
+  bookings$: Observable<any[]> = of([]);
 
   ngOnInit(): void {
     this.user$.subscribe(user => {
       if (user?.id) {
         const userId = user.id.toString();
-        this.trips$ = this.tripsApi.getByUserId(userId);
-        this.bookings$ = this.bookingsApi.getByUserId(userId);
+        this.trips$ = this.tripsApi.getByUserId(userId).pipe(
+          catchError(error => {
+            console.error('Error loading trips:', error);
+            return of([]);
+          })
+        );
+        this.bookings$ = this.bookingsApi.getByUserId(userId).pipe(
+          catchError(error => {
+            console.error('Error loading bookings:', error);
+            return of([]);
+          })
+        );
       } else {
-        this.trips$ = new Observable(observer => observer.next([]));
-        this.bookings$ = new Observable(observer => observer.next([]));
+        this.trips$ = of([]);
+        this.bookings$ = of([]);
       }
     });
   }

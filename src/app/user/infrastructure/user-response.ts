@@ -24,3 +24,7 @@ export interface UserResponse {
     averageRating: number;
   };
 }
+
+export interface UsersListResponse {
+  users: UserResponse[];
+}

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { MatIcon } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { UserStore } from '../../../application/user.store';
@@ -21,8 +21,8 @@ export class UserWalletCard implements OnInit {
   private readonly stateService = inject(UserSettingsStateService);
 
   user$ = this.userStore.getGuestUser$();
-  payments$: Observable<Payment[]> = new Observable();
-  totalSpent$: Observable<number> = new Observable();
+  payments$: Observable<Payment[]> = of([]);
+  totalSpent$: Observable<number> = of(0);
 
   ngOnInit(): void {
     this.user$.subscribe(user => {
@@ -31,8 +31,8 @@ export class UserWalletCard implements OnInit {
         this.payments$ = this.paymentsService.getRecentPayments(userId, 10);
         this.totalSpent$ = this.paymentsService.getTotalSpent(userId);
       } else {
-        this.payments$ = new Observable(observer => observer.next([]));
-        this.totalSpent$ = new Observable(observer => observer.next(0));
+        this.payments$ = of([]);
+        this.totalSpent$ = of(0);
       }
     });
   }

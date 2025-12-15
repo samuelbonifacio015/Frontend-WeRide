@@ -21,7 +21,7 @@ export class UserPersonalInfoCard implements OnInit {
 
   user$ = this.userStore.getGuestUser$();
   currentUser: User | null = null;
-  
+
   personalInfoForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -58,13 +58,13 @@ export class UserPersonalInfoCard implements OnInit {
     if (input.files && input.files[0]) {
       const file = input.files[0];
       const reader = new FileReader();
-      
+
       reader.onload = (e: ProgressEvent<FileReader>) => {
         const result = e.target?.result as string;
         this.profilePicturePreview = result;
         this.personalInfoForm.patchValue({ profilePicture: result });
       };
-      
+
       reader.readAsDataURL(file);
     }
   }
@@ -99,30 +99,40 @@ export class UserPersonalInfoCard implements OnInit {
       localStorage.setItem('userProfile', JSON.stringify(updatedUser));
 
       this.userStore.updateUser(this.currentUser.id, updatedUser).subscribe({
-        next: () => {
+        next: (updatedUserResult) => {
           this.isLoading = false;
-          this.successMessage = 'Información actualizada correctamente';
-          setTimeout(() => {
-            this.closeCard();
-          }, 1500);
+          if (updatedUserResult) {
+            this.successMessage = 'Información actualizada correctamente';
+            setTimeout(() => {
+              this.closeCard();
+            }, 1500);
+          } else {
+            const storedUser = localStorage.getItem('userProfile');
+            if (storedUser) {
+              this.errorMessage = 'Error de conexión. Los datos se guardaron localmente y se sincronizarán cuando haya conexión';
+              setTimeout(() => {
+                this.closeCard();
+              }, 2000);
+            } else {
+              this.errorMessage = 'Error al guardar la información. Por favor, intente nuevamente';
+            }
+          }
         },
-        error: (error) => {
-          console.error('Error al actualizar usuario:', error);
-          
+        error: (err) => {
+          console.error('Error al actualizar usuario:', err);
+          this.isLoading = false;
           const storedUser = localStorage.getItem('userProfile');
           if (storedUser) {
-            this.isLoading = false;
             this.errorMessage = 'Error de conexión. Los datos se guardaron localmente y se sincronizarán cuando haya conexión';
             setTimeout(() => {
               this.closeCard();
             }, 2000);
           } else {
-            this.isLoading = false;
             this.errorMessage = 'Error al guardar la información. Por favor, intente nuevamente';
           }
         }
       });
-    } catch (error) {
+    } catch {
       this.isLoading = false;
       this.errorMessage = 'Error al procesar los datos';
     }
