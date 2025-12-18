@@ -37,7 +37,19 @@ interface BookingView {
 
 @Component({
   selector: 'app-booking-list',
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatSnackBarModule, MatDialogModule, RouterModule, TranslateModule, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    RouterModule,
+    TranslateModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule
+  ],
   templateUrl: './booking-list.html',
   styleUrl: './booking-list.css'
 })
@@ -66,9 +78,6 @@ export class BookingListComponent implements OnInit {
   currentFilter: BookingFilter = this.filterService.getDefaultFilter();
 
   ngOnInit(): void {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:68',message:'Component initialized, loading bookings',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     this.loadBookings();
   }
 
@@ -80,79 +89,52 @@ export class BookingListComponent implements OnInit {
       : [];
 
     forkJoin({
-      bookings: this.bookingsApi.getAll().pipe(
-        catchError(error => {
-          console.error('Error loading bookings from API:', error);
-          return of([]);
-        })
-      ),
-      vehicles: this.vehiclesApi.getAll().pipe(
-        catchError(error => {
-          console.error('Error loading vehicles from API:', error);
-          return of([]);
-        })
-      ),
-      locations: this.locationsApi.getAll().pipe(
-        catchError(error => {
-          console.error('Error loading locations from API:', error);
-          return of([]);
-        })
-      )
+      bookings: this.bookingsApi.getAll().pipe(catchError(() => of([]))),
+      vehicles: this.vehiclesApi.getAll().pipe(catchError(() => of([]))),
+      locations: this.locationsApi.getAll().pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ bookings, vehicles, locations }) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:99',message:'ForkJoin completed',data:{bookingsCount:Array.isArray(bookings)?bookings.length:'not-array',localBookingsCount:localBookings.length,vehiclesCount:Array.isArray(vehicles)?vehicles.length:'not-array',locationsCount:Array.isArray(locations)?locations.length:'not-array'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         try {
           const bookingsArray = Array.isArray(bookings) ? bookings : [];
           const vehiclesArray = Array.isArray(vehicles) ? vehicles : [];
           const locationsArray = Array.isArray(locations) ? locations : [];
-
           const allBookings = [...localBookings, ...bookingsArray];
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:105',message:'Merged bookings',data:{allBookingsCount:allBookings.length,bookingsArrayCount:bookingsArray.length,localBookingsCount:localBookings.length,firstBookingId:allBookings[0]?.id,firstBookingKeys:allBookings[0]?Object.keys(allBookings[0]):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+          const uniqueBookings = Array.from(new Map(allBookings.map(b => [b.id, b])).values());
 
-          const uniqueBookings = Array.from(
-            new Map(allBookings.map(b => [b.id, b])).values()
-          );
+          const normalizeId = (value: any) => `${value ?? ''}`;
 
           this.bookings = uniqueBookings.map(booking => {
-            const vehicle = vehiclesArray.find(v => v.id === booking.vehicleId);
-            const startLocation = locationsArray.find(l => l.id === booking.startLocationId);
-            const endLocation = locationsArray.find(l => l.id === booking.endLocationId);
+            const vehicle = vehiclesArray.find(
+              v => normalizeId(v.id ?? (v as any)._id) === normalizeId(booking.vehicleId)
+            );
+            const startLocation = locationsArray.find(
+              l => normalizeId(l.id ?? (l as any)._id) === normalizeId(booking.startLocationId)
+            );
+            const endLocation = locationsArray.find(
+              l => normalizeId(l.id ?? (l as any)._id) === normalizeId(booking.endLocationId)
+            );
 
-            const bookingView = {
+            return {
               id: booking.id,
               vehicleId: booking.vehicleId,
               vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
-              startLocationName: startLocation?.name || 'Unknown',
-              endLocationName: endLocation?.name || 'Unknown',
+              startLocationName: startLocation?.address || startLocation?.name || 'Unknown Location',
+              endLocationName: endLocation?.address || endLocation?.name || 'Unknown Location',
               startDate: new Date(booking.startDate),
               duration: booking.duration,
               finalCost: booking.finalCost,
               status: booking.status
             };
-            // #region agent log
-            if (uniqueBookings.indexOf(booking) === 0) {
-              fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:111',message:'First booking view mapped',data:{bookingView,originalBooking:booking,hasVehicle:!!vehicle},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            }
-            // #endregion
-            return bookingView;
           });
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-list/booking-list.ts:127',message:'Bookings array populated',data:{bookingsCount:this.bookings.length,firstBookingId:this.bookings[0]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+
           this.applyFilters();
-        } catch (error) {
-          console.error('Error processing bookings data:', error);
+        } catch {
           this.loadFromLocalStorageOnly();
         } finally {
           this.isLoading = false;
         }
       },
-      error: (error) => {
-        console.error('Error in forkJoin:', error);
+      error: () => {
         this.loadFromLocalStorageOnly();
       }
     });
@@ -161,20 +143,21 @@ export class BookingListComponent implements OnInit {
   private loadFromLocalStorageOnly(): void {
     try {
       const localBookings = this.bookingStorage.getBookings();
-      this.bookings = Array.isArray(localBookings) ? localBookings.map(booking => ({
-        id: booking.id,
-        vehicleId: booking.vehicleId,
-        vehicleName: 'Vehicle',
-        startLocationName: 'Start Location',
-        endLocationName: 'End Location',
-        startDate: new Date(booking.startDate),
-        duration: booking.duration,
-        finalCost: booking.finalCost,
-        status: booking.status
-      })) : [];
+      this.bookings = Array.isArray(localBookings)
+        ? localBookings.map(booking => ({
+            id: booking.id,
+            vehicleId: booking.vehicleId,
+            vehicleName: 'Vehicle',
+            startLocationName: 'Start Location',
+            endLocationName: 'End Location',
+            startDate: new Date(booking.startDate),
+            duration: booking.duration,
+            finalCost: booking.finalCost,
+            status: booking.status
+          }))
+        : [];
       this.applyFilters();
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
+    } catch {
       this.bookings = [];
       this.filteredBookings = [];
     } finally {
@@ -212,39 +195,25 @@ export class BookingListComponent implements OnInit {
   }
 
   editBooking(id: string): void {
-    // Navigate to booking form with the booking ID
     this.router.navigate(['/booking/form', id]);
   }
 
   cancelBooking(id: string): void {
     const booking = this.bookings.find(b => b.id === id);
-    if (!booking || booking.status !== 'pending') {
-      return;
-    }
+    if (!booking || booking.status !== 'pending') return;
 
     const message = this.translate.instant('booking.confirmCancelMessage');
 
     if (confirm(message)) {
-      // Update in localStorage
       const success = this.bookingStorage.cancelBooking(id);
 
       if (success) {
-        // Update local view
         booking.status = 'cancelled';
-
-        // Update in store
         this.bookingStore.loadFromLocalStorage();
 
-        // Try to update in API as well (optional)
         this.bookingsApi.update(id, { status: 'cancelled' }).subscribe({
-          next: () => {
-            this.showSuccessMessage('booking.cancelSuccess');
-          },
-          error: (error) => {
-            console.error('Error updating booking in API:', error);
-            // Still show success since localStorage was updated
-            this.showSuccessMessage('booking.cancelSuccess');
-          }
+          next: () => this.showSuccessMessage('booking.cancelSuccess'),
+          error: () => this.showSuccessMessage('booking.cancelSuccess') // mantenemos feedback aunque falle API
         });
       } else {
         this.showErrorMessage('booking.cancelError');
@@ -253,32 +222,18 @@ export class BookingListComponent implements OnInit {
   }
 
   deleteBooking(id: string): void {
-    // Show confirmation dialog
     const message = this.translate.instant('booking.confirmDeleteMessage');
 
     if (confirm(message)) {
-
-      // 1. Intentamos limpiar del LocalStorage (solo por si acaso, ignoramos el resultado)
       this.bookingStorage.deleteBooking(id);
 
-      // 2. Llamamos a la API (Esta es la acción importante)
       this.bookingsApi.delete(id).subscribe({
         next: () => {
-          console.log('Eliminado correctamente del servidor');
-
-          // 3. ACTUALIZACIÓN VISUAL (Esto es lo que te faltaba/fallaba)
-          // Filtramos la lista en memoria para quitar el elemento borrado
           this.bookings = this.bookings.filter(b => b.id !== id);
-
-          // Importante: Re-aplicar filtros para actualizar la lista visible (filteredBookings)
           this.applyFilters();
-
           this.showSuccessMessage('booking.deleteSuccess');
         },
-        error: (error) => {
-          console.error('Error deleting booking from API:', error);
-          this.showErrorMessage('booking.deleteError');
-        }
+        error: () => this.showErrorMessage('booking.deleteError')
       });
     }
   }
@@ -287,27 +242,23 @@ export class BookingListComponent implements OnInit {
     try {
       this.isActivating = true;
 
-      // Validate booking can be activated
       if (bookingView.status !== 'pending' && bookingView.status !== 'confirmed') {
         this.showErrorMessage('booking.cannotActivate');
         return;
       }
 
-      // Check if there's already an active booking
       const activeBooking = this.activeBookingService.getActiveBooking();
       if (activeBooking) {
         this.showErrorMessage('booking.alreadyHasActive');
         return;
       }
 
-      // Get full booking from storage
       const booking = this.bookingStorage.getBookingById(bookingView.id);
       if (!booking) {
         this.showErrorMessage('booking.notFound');
         return;
       }
 
-      // Get vehicle information
       this.vehiclesApi.getAll().subscribe({
         next: (vehicles) => {
           const vehicle = vehicles.find(v => v.id === bookingView.vehicleId);
@@ -318,7 +269,6 @@ export class BookingListComponent implements OnInit {
             return;
           }
 
-          // Open booking confirmation modal (¿Cómo deseas reservar?)
           const dialogRef = this.dialog.open(BookingConfirmationModal, {
             width: '500px',
             data: { vehicle },
@@ -329,32 +279,27 @@ export class BookingListComponent implements OnInit {
             this.isActivating = false;
 
             if (result === 'now') {
-              // Activate booking immediately
               this.activateBookingNow(booking, vehicle);
             } else if (result === 'schedule') {
-              // Navigate to schedule page
               this.router.navigate(['/booking/schedule-unlock'], {
                 queryParams: { bookingId: booking.id }
               });
             }
           });
         },
-        error: (error) => {
-          console.error('Error loading vehicle:', error);
+        error: () => {
           this.showErrorMessage('booking.vehicleNotAvailable');
           this.isActivating = false;
         }
       });
 
-    } catch (error) {
-      console.error('Error activating booking:', error);
+    } catch {
       this.showErrorMessage('booking.activateError');
       this.isActivating = false;
     }
   }
 
   private activateBookingNow(booking: any, vehicle: any): void {
-    // Update booking status to active
     booking.status = 'active';
     booking.actualStartDate = new Date();
 
@@ -362,13 +307,11 @@ export class BookingListComponent implements OnInit {
     this.bookingStore.loadFromLocalStorage();
     this.activeBookingService.setActiveBooking(booking);
 
-    // Update the view
     const bookingView = this.bookings.find(b => b.id === booking.id);
     if (bookingView) {
       bookingView.status = 'active';
     }
 
-    // Open unlock method selection modal
     const dialogRef = this.dialog.open(UnlockMethodSelectionModal, {
       width: '500px',
       data: { booking, vehicle },
@@ -377,7 +320,6 @@ export class BookingListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === 'manual') {
-        // Navigate to manual unlock
         this.router.navigate(['/garage'], {
           queryParams: {
             action: 'unlock-manual',
@@ -386,7 +328,6 @@ export class BookingListComponent implements OnInit {
           }
         });
       } else if (result === 'qr_code') {
-        // Navigate to QR scanner
         this.router.navigate(['/garage'], {
           queryParams: {
             action: 'unlock-qr',

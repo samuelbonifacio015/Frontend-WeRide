@@ -12,6 +12,8 @@
   color: #2d3a4a;
 }
 .form-group {
+  width: 100%;
+  max-width: 100%;
   margin-bottom: 18px;
 }
 .form-group label {
@@ -21,13 +23,33 @@
   color: #2d3a4a;
 }
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 8px 10px;
+  box-sizing: border-box;
+  padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
   font-size: 16px;
   background: #f8fafc;
+  height: 44px;         
+  line-height: 1.2;
+}
+.form-group input[type="number"] {
+  -moz-appearance: textfield;
+}
+.form-group select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.btn-primary,
+.btn-secondary {
+  display: inline-block;
+  margin: 0 auto;
+  vertical-align: middle;
 }
 .btn-primary {
   background: #007bff;
@@ -37,7 +59,6 @@
   border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  margin-right: 10px;
   transition: background 0.2s;
 }
 .btn-primary:hover {

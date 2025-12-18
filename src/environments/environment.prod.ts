@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://weride.duckdns.org/api/v1',
+  apiUrl: 'https://backend-weride.onrender.com/api/v1',
   endpoints: {
     users: '/users',
     vehicles: '/vehicles',
