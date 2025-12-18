@@ -11,6 +11,7 @@ import { UserHelpCard } from '../user-help-card/user-help-card';
 import { UserSettingsCard } from '../user-settings-card/user-settings-card';
 import { UserPersonalInfoCard } from '../user-personal-info-card/user-personal-info-card';
 import { UserSettingsStateService, UserSettingsSection } from '../../../application/user-settings-state.service';
+import { AuthRepositoryImpl } from '../../../../auth/infrastructure/auth-repository.impl';
 
 @Component({
   selector: 'app-user-layout',
@@ -33,28 +34,39 @@ export class UserLayout implements OnInit {
   private readonly userStore = inject(UserStore);
   private readonly route = inject(ActivatedRoute);
   private readonly stateService = inject(UserSettingsStateService);
+  private readonly authRepository = inject(AuthRepositoryImpl);
 
   activeSection: UserSettingsSection = null;
 
   ngOnInit(): void {
+    // Check route params first
     this.route.paramMap.subscribe(params => {
       const raw = params.get('profileId');
       const id = raw ? Number(raw) : NaN;
       if (Number.isFinite(id)) {
         this.userStore.loadUsers(id);
+        return;
       }
-    });
-
-    this.route.queryParamMap.subscribe(params => {
-      const raw = params.get('profileId');
-      const id = raw ? Number(raw) : NaN;
-      if (Number.isFinite(id)) {
-        this.userStore.loadUsers(id);
-      }
+      // No profileId in params, load current user from session
+      this.loadCurrentUserFromSession();
     });
 
     this.stateService.activeSection$.subscribe(section => {
       this.activeSection = section;
+    });
+  }
+
+  private loadCurrentUserFromSession(): void {
+    this.authRepository.getCurrentUser().subscribe(sessionUser => {
+      if (sessionUser) {
+        // Immediate fallback from auth session
+        this.userStore.setFromAuthUser(sessionUser);
+        // Try to fetch from backend by email, but don't clear UI if it fails
+        const email = sessionUser.email ?? '';
+        if (email) {
+          this.userStore.loadCurrentUserByEmail(email);
+        }
+      }
     });
   }
 }

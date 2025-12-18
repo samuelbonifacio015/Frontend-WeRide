@@ -6,7 +6,8 @@
           <img
             *ngIf="user.profilePicture"
             [src]="user.profilePicture"
-            [alt]="user.name"
+            alt="{{ user.name }}"
+            title="{{ user.name }}"
           />
           <span *ngIf="!user.profilePicture">{{ getInitials(user.name) }}</span>
         </div>

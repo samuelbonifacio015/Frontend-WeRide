@@ -6,8 +6,8 @@
           <img
             *ngIf="hasProfilePicture"
             [src]="currentUser.profilePicture"
-            [alt]="currentUser.name || ('user.profile.avatarAlt' | translate)"
-            [title]="currentUser.name || ('user.profile.avatarAlt' | translate)"
+            alt="{{ currentUser.name || ('user.profile.avatarAlt' | translate) }}"
+            title="{{ currentUser.name || ('user.profile.avatarAlt' | translate) }}"
           />
           <span *ngIf="!hasProfilePicture"
             >{{ getInitials(currentUser.name) }}</span
@@ -56,8 +56,8 @@
               <img
                 *ngIf="hasProfilePicture"
                 [src]="currentUser.profilePicture"
-                [alt]="currentUser.name || ('user.profile.avatarAlt' | translate)"
-                [title]="currentUser.name || ('user.profile.avatarAlt' | translate)"
+                alt="{{ currentUser.name || ('user.profile.avatarAlt' | translate) }}"
+                title="{{ currentUser.name || ('user.profile.avatarAlt' | translate) }}"
               />
               <span *ngIf="!hasProfilePicture"
                 >{{ getInitials(currentUser.name) }}</span

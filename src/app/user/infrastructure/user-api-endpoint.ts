@@ -46,6 +46,16 @@ export class UserApiEndpoint {
     );
   }
 
+  getByEmail(email: string): Observable<User | null> {
+    return this.http.get<UserResponse>(`${this.baseUrl}/email/${encodeURIComponent(email)}`).pipe(
+      map(response => UserAssembler.toDomain(response)),
+      catchError(error => {
+        console.error('Error fetching user by email:', error);
+        return of(null);
+      })
+    );
+  }
+
   create(user: User): Observable<User | null> {
     return this.http.post<UserResponse>(this.baseUrl, user).pipe(
       map(response => UserAssembler.toDomain(response)),

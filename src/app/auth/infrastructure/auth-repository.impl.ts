@@ -6,7 +6,6 @@ import { AuthCredentials } from '../domain/model/auth-credentials.entity';
 import { PhoneCredentials } from '../domain/model/phone-credentials.entity';
 import { AuthSession } from '../domain/model/auth-session.entity';
 import { RegistrationData } from '../domain/model/registration-data.entity';
-import { getUserByEmail, getUserByPhone, toUserEntity, addUser, HardcodedUserData } from './hardcoded-users';
 
 @Injectable({
   providedIn: 'root'
@@ -20,48 +19,11 @@ export class AuthRepositoryImpl extends AuthRepository {
   }
 
   loginWithEmail(credentials: AuthCredentials): Observable<AuthSession> {
-    const userData = getUserByEmail(credentials.email);
-    
-    if (!userData) {
-      return throwError(() => new Error('Usuario no encontrado'));
-    }
-
-    if (userData.password !== credentials.password) {
-      return throwError(() => new Error('Contraseña incorrecta'));
-    }
-
-    if (!userData.isActive) {
-      return throwError(() => new Error('Usuario inactivo'));
-    }
-
-    const userEntity = toUserEntity(userData);
-    const session = this.createSession(userEntity, false);
-    this.saveSession(session);
-    return of(session);
+    return throwError(() => new Error('Email login no implementado. Use backend API.'));
   }
 
   loginWithPhone(credentials: PhoneCredentials): Observable<AuthSession> {
-    const storedCode = this.verificationCodes.get(credentials.phone);
-
-    if (!storedCode || storedCode !== credentials.verificationCode) {
-      return throwError(() => new Error('Código de verificación inválido'));
-    }
-
-    const userData = getUserByPhone(credentials.phone);
-    
-    if (!userData) {
-      return throwError(() => new Error('Usuario no encontrado'));
-    }
-
-    if (!userData.isActive) {
-      return throwError(() => new Error('Usuario inactivo'));
-    }
-
-    const userEntity = toUserEntity(userData);
-    const session = this.createSession(userEntity, false);
-    this.saveSession(session);
-    this.verificationCodes.delete(credentials.phone);
-    return of(session);
+    return throwError(() => new Error('Phone login no implementado. Use backend API.'));
   }
 
   loginWithGoogle(): Observable<AuthSession> {
@@ -101,36 +63,7 @@ export class AuthRepositoryImpl extends AuthRepository {
   }
 
   register(data: RegistrationData): Observable<User> {
-    const newUserData: HardcodedUserData = {
-      id: `user-${Date.now()}`,
-      name: data.fullName,
-      email: data.email || `${data.phone}@weride.com`,
-      password: Math.random().toString(36).slice(-8),
-      phone: data.phone,
-      membershipPlanId: 'basic-plan-001',
-      isActive: true,
-      profilePicture: 'assets/users/default.jpg',
-      dateOfBirth: '',
-      address: '',
-      emergencyContact: '',
-      verificationStatus: 'pending',
-      registrationDate: new Date().toISOString(),
-      preferences: {
-        language: 'es',
-        notifications: true,
-        theme: 'light'
-      },
-      statistics: {
-        totalTrips: 0,
-        totalDistance: 0,
-        totalSpent: 0,
-        averageRating: 0
-      }
-    };
-
-    addUser(newUserData);
-    const userEntity = toUserEntity(newUserData);
-    return of(userEntity);
+    return throwError(() => new Error('Registration no implementado. Use backend API.'));
   }
 
   sendVerificationCode(phone: string): Observable<boolean> {

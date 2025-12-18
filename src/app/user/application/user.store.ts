@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { User } from '../domain/model/user.entity';
 import { UserApiEndpoint } from '../infrastructure/user-api-endpoint';
+import { UserAssembler } from '../infrastructure/user-assembler';
+import { User as AuthUser } from '../../auth/domain/model/user.entity';
 
 @Injectable({
   providedIn: 'root'
@@ -57,6 +59,38 @@ export class UserStore {
         return of(null);
       })
     ).subscribe();
+  }
+
+  loadCurrentUserByEmail(email: string): void {
+    if (!email) {
+      return;
+    }
+    // Don't set loading=true to preserve fallback UI if backend fails
+    this.userApiEndpoint.getByEmail(email).pipe(
+      tap(user => {
+        if (user) {
+          // Backend succeeded, update with real data
+          this.selectedUserSubject.next(user);
+          this.usersSubject.next([user]);
+        }
+        // If user is null, keep existing fallback data
+      }),
+      catchError(error => {
+        console.error('Error al cargar usuario por email (usando fallback):', error);
+        // On error, don't clear state—fallback from setFromAuthUser remains
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  setFromAuthUser(authUser: AuthUser | null): void {
+    if (!authUser) {
+      return;
+    }
+    const user = UserAssembler.fromAuthUser(authUser);
+    this.selectedUserSubject.next(user);
+    this.usersSubject.next([user]);
+    this.loadingSubject.next(false);
   }
 
   getGuestUser$(): Observable<User | null> {
