@@ -5,7 +5,7 @@ export const environment = {
   production: false,
   apiUrl: 'https://backend-weride.onrender.com/api/v1',
   endpoints: {
-    users: '/users',
+    users: '/accounts',
     vehicles: '/vehicles',
     plans: '/plans',
     locations: '/location',

@@ -15,22 +15,16 @@ export class UserApiEndpoint {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<User[]> {
-    return this.http.get<UserResponse[] | UsersListResponse>(this.baseUrl).pipe(
-      map(response => {
-        let responses: UserResponse[];
-        if (Array.isArray(response)) {
-          responses = response;
-        } else if (response && typeof response === 'object' && 'users' in response) {
-          responses = (response as UsersListResponse).users || [];
-        } else {
-          responses = [];
-        }
-        return responses.map(response => UserAssembler.toDomain(response));
-      }),
+  // METODOS PARA CONSUMIR LA API REST DE USUARIOS
+  // ENDPOINT PENDIENTE A CREAR EN EL BACKEND
+  //
+
+  getCurrentUser(): Observable<User | null> {
+    return this.http.get<UserResponse>(`${environment.apiUrl}/accounts`).pipe(
+      map(response => UserAssembler.toDomain(response)),
       catchError(error => {
-        console.error('Error fetching users:', error);
-        return of([]);
+        console.error('Error fetching current user:', error);
+        return of(null);
       })
     );
   }

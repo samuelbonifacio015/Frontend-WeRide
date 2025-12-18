@@ -20,20 +20,21 @@ export class UserStore {
   constructor(private userApiEndpoint: UserApiEndpoint) {}
 
   loadUsers(): void {
-    this.loadingSubject.next(true);
-    this.userApiEndpoint.getAll().pipe(
-      tap(users => {
-        const usersArray = Array.isArray(users) ? users : [];
-        this.usersSubject.next(usersArray);
-        this.loadingSubject.next(false);
-      }),
-      catchError(error => {
-        console.error('Error al cargar usuarios:', error);
-        this.loadingSubject.next(false);
-        this.usersSubject.next([]);
-        return of([]);
-      })
-    ).subscribe();
+  this.loadingSubject.next(true);
+  this.userApiEndpoint.getCurrentUser().pipe(
+    tap(user => {
+      this.selectedUserSubject.next(user);
+      this.usersSubject.next(user ? [user] : []);
+      this.loadingSubject.next(false);
+    }),
+    catchError(error => {
+      console.error('Error al cargar usuario actual:', error);
+      this.loadingSubject.next(false);
+      this.selectedUserSubject.next(null);
+      this.usersSubject.next([]);
+      return of(null);
+    })
+   ).subscribe();
   }
 
   loadUsersById(id: number): void {
