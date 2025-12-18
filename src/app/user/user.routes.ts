@@ -5,6 +5,10 @@ export const USER_ROUTES: Routes = [
   {
     path: '',
     component: UserLayout
+  },
+  {
+    path: ':profileId',
+    component: UserLayout
   }
 ];
 

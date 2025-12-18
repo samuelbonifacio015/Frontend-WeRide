@@ -3,7 +3,7 @@ import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { User } from '../domain/model/user.entity';
-import { UserResponse, UsersListResponse } from './user-response';
+import { ProfileResponse, UserResponse, UsersListResponse } from './user-response';
 import { map, catchError } from 'rxjs/operators';
 import { UserAssembler } from './user-assembler';
 
@@ -19,19 +19,16 @@ export class UserApiEndpoint {
   // ENDPOINT PENDIENTE A CREAR EN EL BACKEND
   //
 
-  getCurrentUser(): Observable<User | null> {
-    return this.http.get<UserResponse>(`${environment.apiUrl}/accounts`).pipe(
-      map(response => UserAssembler.toDomain(response)),
-      catchError(error => {
-        console.error('Error fetching current user:', error);
-        return of(null);
-      })
+  getCurrentUser(profileId: number): Observable<User | null> {
+    return this.http.get<ProfileResponse>(`${this.baseUrl}/${profileId}`).pipe(
+      map(res => UserAssembler.fromProfile(res)),
+      catchError(err => { console.error('Error fetching profile:', err); return of(null); })
     );
   }
 
   getById(id: number): Observable<User | null> {
-    return this.http.get<UserResponse>(`${this.baseUrl}/${id}`).pipe(
-      map(response => UserAssembler.toDomain(response)),
+    return this.http.get<ProfileResponse>(`${this.baseUrl}/${id}`).pipe(
+      map(response => UserAssembler.fromProfile(response)),
       catchError(error => {
         console.error('Error fetching user by ID:', error);
         return of(null);

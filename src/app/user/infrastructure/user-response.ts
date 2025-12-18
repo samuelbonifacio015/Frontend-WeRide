@@ -28,3 +28,11 @@ export interface UserResponse {
 export interface UsersListResponse {
   users: UserResponse[];
 }
+
+export interface ProfileResponse {
+  id: number;
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}

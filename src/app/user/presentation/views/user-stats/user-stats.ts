@@ -17,7 +17,7 @@ export class UserStats implements OnInit {
   user$: Observable<User | null> = this.userStore.getGuestUser$();
 
   ngOnInit(): void {
-    this.userStore.loadUsers();
+    // no-op: parent view triggers user loading when profileId is present
   }
 
   getInitials(name?: string | null): string {

@@ -19,22 +19,28 @@ export class UserStore {
 
   constructor(private userApiEndpoint: UserApiEndpoint) {}
 
-  loadUsers(): void {
-  this.loadingSubject.next(true);
-  this.userApiEndpoint.getCurrentUser().pipe(
-    tap(user => {
-      this.selectedUserSubject.next(user);
-      this.usersSubject.next(user ? [user] : []);
-      this.loadingSubject.next(false);
-    }),
-    catchError(error => {
-      console.error('Error al cargar usuario actual:', error);
-      this.loadingSubject.next(false);
+  loadUsers(profileId?: number): void {
+    if (profileId == null) {
       this.selectedUserSubject.next(null);
       this.usersSubject.next([]);
-      return of(null);
-    })
-   ).subscribe();
+      this.loadingSubject.next(false);
+      return;
+    }
+    this.loadingSubject.next(true);
+    this.userApiEndpoint.getCurrentUser(profileId).pipe(
+      tap(user => {
+        this.selectedUserSubject.next(user);
+        this.usersSubject.next(user ? [user] : []);
+        this.loadingSubject.next(false);
+      }),
+      catchError(err => {
+        console.error('Error al cargar perfil:', err);
+        this.selectedUserSubject.next(null);
+        this.usersSubject.next([]);
+        this.loadingSubject.next(false);
+        return of(null);
+      })
+    ).subscribe();
   }
 
   loadUsersById(id: number): void {

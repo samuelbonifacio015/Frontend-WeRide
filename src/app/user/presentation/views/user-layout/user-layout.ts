@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { UserStore } from '../../../application/user.store';
 import { UserStats } from '../user-stats/user-stats';
 import { UserSettings } from '../user-settings/user-settings';
@@ -30,12 +31,28 @@ import { UserSettingsStateService, UserSettingsSection } from '../../../applicat
 })
 export class UserLayout implements OnInit {
   private readonly userStore = inject(UserStore);
+  private readonly route = inject(ActivatedRoute);
   private readonly stateService = inject(UserSettingsStateService);
 
   activeSection: UserSettingsSection = null;
 
   ngOnInit(): void {
-    this.userStore.loadUsers();
+    this.route.paramMap.subscribe(params => {
+      const raw = params.get('profileId');
+      const id = raw ? Number(raw) : NaN;
+      if (Number.isFinite(id)) {
+        this.userStore.loadUsers(id);
+      }
+    });
+
+    this.route.queryParamMap.subscribe(params => {
+      const raw = params.get('profileId');
+      const id = raw ? Number(raw) : NaN;
+      if (Number.isFinite(id)) {
+        this.userStore.loadUsers(id);
+      }
+    });
+
     this.stateService.activeSection$.subscribe(section => {
       this.activeSection = section;
     });
