@@ -300,7 +300,7 @@
 .guest-icon .material-symbols-rounded {
   font-size: 4rem;
   color: #9ca3af;
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 48;
 }
 
 .guest-placeholder h2 {
@@ -357,24 +357,24 @@
   .summary-card {
     padding: 1.1rem;
   }
-  
+
   .guest-placeholder {
     padding: 3rem 1.5rem;
   }
-  
+
   .guest-icon {
     width: 100px;
     height: 100px;
   }
-  
+
   .guest-icon .material-symbols-rounded {
     font-size: 3.5rem;
   }
-  
+
   .guest-placeholder h2 {
     font-size: 1.5rem;
   }
-  
+
   .guest-placeholder p {
     font-size: 1rem;
   }
