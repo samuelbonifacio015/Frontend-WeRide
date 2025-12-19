@@ -1,0 +1,37 @@
+.guest-banner {
+  max-width: 80%;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff8e1;
+  color: #4a3d00;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  margin: 12px auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.icon {
+  font-size: 20px;
+}
+.message {
+  flex: 1;
+  font-size: 14px;
+}
+.btn-login {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #7c3aed;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.5s ease;
+}
+.btn-login:hover {
+  background: #44217e;
+}

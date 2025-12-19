@@ -2,6 +2,7 @@
   <app-sidebar [collapsed]="sidebarCollapsed"></app-sidebar>
 
   <div class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <app-guest-banner></app-guest-banner>
     <app-header (sidebarToggle)="toggleSidebar()"></app-header>
     <div class="content-wrapper">
       <router-outlet></router-outlet>

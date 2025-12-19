@@ -1,0 +1,5 @@
+<div class="guest-banner" *ngIf="isGuest()">
+  <span class="material-symbols-rounded icon">Invitado</span>
+  <span class="message">Estás navegando como invitado. Inicia sesión para disfrutar todas las funciones.</span>
+  <button class="btn-login" type="button" (click)="goToLogin()">Iniciar sesión</button>
+</div>
