@@ -25,15 +25,19 @@ export class LoginComponent implements OnInit {
   private guestLoginAttempted = signal(false);
 
   constructor() {
-    // Effect to navigate to home when guest login is successful
     effect(() => {
       const session = this.authStore.session();
       const error = this.authStore.error();
-      const isLoading = this.authStore.isLoading();
 
-      if (this.guestLoginAttempted() && !isLoading) {
-        if (session && session.isValid && !error) {
+      console.log('[effect] guestAttempt:', this.guestLoginAttempted(), { session, error });
+
+      if (this.guestLoginAttempted()) {
+        if (session && !error) {
+          this.guestLoginAttempted.set(false);
+          console.log('[effect] navigating to /home');
           this.router.navigate(['/home']);
+        } else if (error) {
+          console.error('[effect] guest login error:', error);
           this.guestLoginAttempted.set(false);
         }
       }
@@ -75,7 +79,9 @@ export class LoginComponent implements OnInit {
   }
 
   loginAsGuest() {
+    console.log('loginAsGuest clicked', { dataLoaded: this.dataLoaded, guestLoginAttemptedBefore: this.guestLoginAttempted() });
     this.guestLoginAttempted.set(true);
+    console.log('guestLoginAttempted set to true, calling authStore.loginAsGuest()');
     this.authStore.loginAsGuest();
   }
 }

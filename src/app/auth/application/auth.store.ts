@@ -122,30 +122,25 @@ export const AuthStore = signalStore(
         )
       ),
 
-      loginAsGuest: rxMethod<void>(
-        pipe(
-          tap(() => patchState(store, { isLoading: true, error: null })),
-          switchMap(() =>
-            loginAsGuestUseCase.execute().pipe(
-              tap((session) => {
-                patchState(store, {
-                  session,
-                  currentUser: session.user,
-                  isLoading: false,
-                  error: null
-                });
-              }),
-              catchError((error) => {
-                patchState(store, {
-                  isLoading: false,
-                  error: error.message || 'Error al entrar como invitado'
-                });
-                return of(null);
-              })
-            )
-          )
-        )
-      ),
+
+      ///REFACTOR LOGIN AS GUEST CASE
+      
+      loginAsGuest() {
+        patchState(store, { isLoading: true, error: null });
+        loginAsGuestUseCase.execute().subscribe({
+          next: (session) => {
+            patchState(store, {
+              session,
+              currentUser: null,
+              isLoading: false,
+              error: null
+            });
+          },
+          error: (err) => {
+            patchState(store, { isLoading: false, error: String(err) });
+          }
+        });
+      },
 
       sendVerificationCode: rxMethod<string>(
         pipe(

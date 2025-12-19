@@ -276,6 +276,70 @@
   }
 }
 
+.guest-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 60vh;
+}
+
+.guest-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.guest-icon .material-symbols-rounded {
+  font-size: 4rem;
+  color: #9ca3af;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+}
+
+.guest-placeholder h2 {
+  font-size: 1.75rem;
+  margin: 0 0 1rem 0;
+  color: #111827;
+  font-weight: 600;
+}
+
+.guest-placeholder p {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0 0 2.5rem 0;
+  max-width: 450px;
+  line-height: 1.6;
+}
+
+.register-button {
+  padding: 0.875rem 2.5rem;
+  background: linear-gradient(135deg, #6f4dff, #a077ff);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 25px rgba(111, 77, 255, 0.3);
+}
+
+.register-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(111, 77, 255, 0.4);
+}
+
+.register-button:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 640px) {
   .profile-shell {
     padding: 1.25rem;
@@ -292,5 +356,26 @@
 
   .summary-card {
     padding: 1.1rem;
+  }
+  
+  .guest-placeholder {
+    padding: 3rem 1.5rem;
+  }
+  
+  .guest-icon {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .guest-icon .material-symbols-rounded {
+    font-size: 3.5rem;
+  }
+  
+  .guest-placeholder h2 {
+    font-size: 1.5rem;
+  }
+  
+  .guest-placeholder p {
+    font-size: 1rem;
   }
 }

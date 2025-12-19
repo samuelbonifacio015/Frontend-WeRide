@@ -6,7 +6,6 @@ import { RegisterComponent } from './presentation/views/register/register.compon
 import { EmailLoginComponent } from './presentation/views/email-login/email-login.component';
 import {GoogleLogin} from './presentation/views/google-login/google-login';
 
-
 export const AUTH_ROUTES: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },

@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { User } from '../../../domain/model/user.entity';
 import { MatIconModule } from '@angular/material/icon';
+import { AuthStore } from '../../../../auth/application/auth.store';
 
 @Component({
   selector: 'app-user-profile',
@@ -11,9 +13,22 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './user-profile.html',
   styleUrl: './user-profile.css'
 })
-export class UserProfile {
+export class UserProfile implements OnInit {
   @Input() user: User | null = null;
   private translate = inject(TranslateService);
+  private authStore = inject(AuthStore);
+  private router = inject(Router);
+  
+  isGuest = false;
+  
+  ngOnInit(): void {
+    const session = this.authStore.session();
+    this.isGuest = session?.isGuest ?? false;
+  }
+  
+  navigateToRegister(): void {
+    this.router.navigate(['/auth/register']);
+  }
 
   get mainOptions() {
     return [

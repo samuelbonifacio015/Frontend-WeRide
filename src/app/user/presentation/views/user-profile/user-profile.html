@@ -1,4 +1,4 @@
-<ng-container *ngIf="user as currentUser; else emptyProfile">
+<ng-container *ngIf="!isGuest && user as currentUser; else guestOrEmpty">
   <section class="profile-shell">
     <div class="profile-header">
       <div class="header-left">
@@ -26,14 +26,20 @@
         </div>
       </div>
 
-      <button class="icon-button" type="button" [attr.aria-label]="'user.profile.configureProfile' | translate">
+      <button
+        class="icon-button"
+        type="button"
+        [attr.aria-label]="'user.profile.configureProfile' | translate"
+      >
         <span class="material-symbols-rounded">settings</span>
       </button>
     </div>
 
     <div class="profile-content">
       <div class="options-column">
-        <div class="column-title">{{ 'user.profile.quickMenu' | translate }}</div>
+        <div class="column-title">
+          {{ 'user.profile.quickMenu' | translate }}
+        </div>
         <div class="options-list">
           <button
             class="menu-item"
@@ -81,8 +87,27 @@
   </section>
 </ng-container>
 
-<ng-template #emptyProfile>
-  <section class="profile-shell">
-    <p>{{ 'user.profile.noProfileInfo' | translate }}</p>
+<ng-template #guestOrEmpty>
+  <section class="profile-shell" *ngIf="isGuest; else emptyProfile">
+    <div class="guest-placeholder">
+      <div class="guest-icon">
+        <span class="material-symbols-rounded">person_off</span>
+      </div>
+      <h2>{{ 'user.profile.guestTitle' | translate }}</h2>
+      <p>{{ 'user.profile.guestMessage' | translate }}</p>
+      <button
+        class="register-button"
+        type="button"
+        (click)="navigateToRegister()"
+      >
+        {{ 'user.profile.registerButton' | translate }}
+      </button>
+    </div>
   </section>
+
+  <ng-template #emptyProfile>
+    <section class="profile-shell">
+      <p>{{ 'user.profile.noProfileInfo' | translate }}</p>
+    </section>
+  </ng-template>
 </ng-template>

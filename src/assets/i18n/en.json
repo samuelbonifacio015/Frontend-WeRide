@@ -261,7 +261,10 @@
       "avatarAlt": "User avatar",
       "configureProfile": "Configure profile",
       "manageAccount": "Manage your account",
-      "customizeProfile": "Customize your profile"
+      "customizeProfile": "Customize your profile",
+      "guestTitle": "Guest User",
+      "guestMessage": "Register to start using WeRide",
+      "registerButton": "Register Now"
     },
     "security": {
       "title": "Security Center",
