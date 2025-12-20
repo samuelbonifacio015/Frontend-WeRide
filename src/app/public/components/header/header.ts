@@ -7,11 +7,14 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 import { LanguageSwitcher } from '../language-switcher/language-switcher';
 import { NotificationsApiEndpoint } from '../../../booking/infraestructure/notifications-api-endpoint';
 import { Notification } from '../../../booking/domain/model/notification';
 import { toDomainNotification } from '../../../booking/infraestructure/notification-assembler';
 import { NotificationResponse } from '../../../booking/infraestructure/notifications-response';
+import { UserStore } from '../../../user/application/user.store';
+import { AuthStore } from '../../../auth/application/auth.store';
 
 @Component({
   selector: 'app-header',
@@ -33,6 +36,12 @@ export class HeaderComponent implements OnInit {
 
   private notificationsApi = inject(NotificationsApiEndpoint);
   private router = inject(Router);
+  private userStore = inject(UserStore);
+  private authStore = inject(AuthStore);
+
+  userName$ = this.userStore.selectedUser$.pipe(
+    map(user => user?.name?.trim() || this.authStore.session()?.user?.name?.trim() || '')
+  );
 
   notifications = signal<Notification[]>([]);
   unreadCount = computed(() => this.notifications().filter(n => !n.isRead).length);
@@ -95,6 +104,13 @@ export class HeaderComponent implements OnInit {
   }
 
   getUserInitials(): string {
-    return 'U';
+    const user = this.userStore.selectedUserSubject?.value;
+    const authUser = this.authStore.session()?.user;
+    const name = user?.name || authUser?.name || 'U';
+    
+    return name.split(' ')
+      .slice(0, 2)
+      .map(part => part[0]?.toUpperCase() || '')
+      .join('') || 'U';
   }
 }

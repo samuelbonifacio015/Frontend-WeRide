@@ -16,9 +16,7 @@ export class UserStats implements OnInit {
   private readonly userStore = inject(UserStore);
   user$: Observable<User | null> = this.userStore.getGuestUser$();
 
-  ngOnInit(): void {
-    // no-op: parent view triggers user loading when profileId is present
-  }
+  ngOnInit(): void {}
 
   getInitials(name?: string | null): string {
     if (!name) {

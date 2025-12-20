@@ -31,7 +31,7 @@
     "bookings": "Reservas",
     "user": "User"
   },
-  "navbar": {
+  "header": {
     "notifications": {
       "title": "Notificaciones",
       "markAllRead": "Marcar todas como leídas"

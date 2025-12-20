@@ -3,7 +3,7 @@
     <button mat-icon-button>
       <mat-icon>account_circle</mat-icon>
     </button>
-    <h3>{{ 'navigation.user' | translate }}</h3>
+    <h3>{{ (userName$ | async) || ('navigation.user' | translate) }}</h3>
   </div>
 
   <nav>

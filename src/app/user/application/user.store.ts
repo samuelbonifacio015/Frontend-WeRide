@@ -13,8 +13,12 @@ export class UserStore {
   private usersSubject = new BehaviorSubject<User[]>([]);
   readonly users$ = this.usersSubject.asObservable();
 
-  private selectedUserSubject = new BehaviorSubject<User | null>(null);
+  public selectedUserSubject = new BehaviorSubject<User | null>(null);
   readonly selectedUser$ = this.selectedUserSubject.asObservable();
+
+  readonly currentUserName$ = this.selectedUser$.pipe(
+    map(user => user?.name?.trim() ?? '')
+  );
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();

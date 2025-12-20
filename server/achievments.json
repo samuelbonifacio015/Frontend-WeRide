@@ -1,0 +1,64 @@
+{
+  "achievements": [
+    {
+      "title": "Bienvenido a WeRide",
+      "image": "assets/achievements/welcome_badge.png",
+      "description": "Has completado tu registro e iniciado sesión por primera vez en la plataforma.",
+      "obtainedAt": "2025-10-25T14:30:00Z"
+    },
+    {
+      "title": "Identidad Verificada",
+      "image": "assets/achievements/verified_user.png",
+      "description": "Has verificado exitosamente tu número de celular mediante el código de seguridad.",
+      "obtainedAt": "2025-10-25T14:35:00Z"
+    },
+    {
+      "title": "Primer Despegue",
+      "image": "assets/achievements/first_ride.png",
+      "description": "Completaste tu primer viaje en un vehículo eléctrico WeRide.",
+      "obtainedAt": "2025-10-26T09:15:00Z"
+    },
+    {
+      "title": "Planificador Urbano",
+      "image": "assets/achievements/scheduler.png",
+      "description": "Utilizaste la función de desbloqueo programado para asegurar tu vehículo con anticipación.",
+      "obtainedAt": "2025-10-28T18:00:00Z"
+    },
+    {
+      "title": "Escáner Veloz",
+      "image": "assets/achievements/qr_master.png",
+      "description": "Desbloqueaste un vehículo escaneando el código QR directamente desde la app.",
+      "obtainedAt": "2025-10-30T08:20:00Z"
+    },
+    {
+      "title": "Socio Premium",
+      "image": "assets/achievements/subscriber.png",
+      "description": "Adquiriste tu primer plan de suscripción para moverte sin límites.",
+      "obtainedAt": "2025-11-01T10:00:00Z"
+    },
+    {
+      "title": "Voz de la Comunidad",
+      "image": "assets/achievements/reviewer.png",
+      "description": "Calificaste tu experiencia de viaje ayudándonos a mejorar el servicio.",
+      "obtainedAt": "2025-11-05T19:45:00Z"
+    },
+    {
+      "title": "Explorador de Garaje",
+      "image": "assets/achievements/garage_explorer.png",
+      "description": "Utilizaste los filtros del Garaje para encontrar el vehículo perfecto para ti.",
+      "obtainedAt": "2025-11-10T12:30:00Z"
+    },
+    {
+      "title": "Guardián de la Flota",
+      "image": "assets/achievements/reporter.png",
+      "description": "Reportaste una incidencia con un vehículo, contribuyendo al mantenimiento de la flota.",
+      "obtainedAt": "2025-11-15T16:20:00Z"
+    },
+    {
+      "title": "Ruta Histórica",
+      "image": "assets/achievements/history_tracker.png",
+      "description": "Accediste a tu historial de viajes para revisar tus rutas y consumos.",
+      "obtainedAt": "2025-11-20T21:10:00Z"
+    }
+  ]
+}

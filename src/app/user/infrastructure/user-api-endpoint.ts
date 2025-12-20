@@ -15,10 +15,6 @@ export class UserApiEndpoint {
 
   constructor(private http: HttpClient) {}
 
-  // METODOS PARA CONSUMIR LA API REST DE USUARIOS
-  // ENDPOINT PENDIENTE A CREAR EN EL BACKEND
-  //
-
   getCurrentUser(profileId: number): Observable<User | null> {
     return this.http.get<ProfileResponse>(`${this.baseUrl}/${profileId}`).pipe(
       map(res => UserAssembler.fromProfile(res)),

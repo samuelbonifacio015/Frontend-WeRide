@@ -25,9 +25,9 @@
     </button>
 
     <div class="user-profile">
-      <span class="user-name-nav"
-        >{{ ('navigation.user' | translate) }}</span
-      >
+      <span class="user-name-nav">
+        {{ (userName$ | async) || ('navigation.user' | translate) }}
+      </span>
       <button mat-icon-button [matMenuTriggerFor]="userMenu">
         <mat-icon>account_circle</mat-icon>
       </button>
@@ -41,7 +41,7 @@
   xPosition="before"
 >
   <div class="notification-header" (click)="$event.stopPropagation()">
-    <h3>{{ 'navbar.notifications.title' | translate }}</h3>
+    <h3>{{ 'header.notifications.title' | translate }}</h3>
   </div>
 
   @if (notifications().length > 0) {
@@ -93,10 +93,10 @@
     </div>
     <div class="user-info">
       <div class="user-name">
-        {{ ('navigation.user' | translate) }}
+        {{ (userName$ | async) || ('navigation.user' | translate) }}
       </div>
       <div class="user-subtitle">
-        {{ 'navbar.userMenu.subtitle' | translate }}
+        {{ 'header.userMenu.subtitle' | translate }}
       </div>
     </div>
   </div>
@@ -105,13 +105,13 @@
 
   <button mat-menu-item (click)="navigateToProfile()">
     <mat-icon>person</mat-icon>
-    <span>{{ 'navbar.userMenu.profile' | translate }}</span>
+    <span>{{ 'header.userMenu.profile' | translate }}</span>
   </button>
 
   <mat-divider></mat-divider>
 
   <button mat-menu-item (click)="logout()" class="logout-item">
     <mat-icon>logout</mat-icon>
-    <span>{{ 'navbar.userMenu.logout' | translate }}</span>
+    <span>{{ 'header.userMenu.logout' | translate }}</span>
   </button>
 </mat-menu>

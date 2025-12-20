@@ -18,6 +18,7 @@
   font-size: 20px;
 }
 .message {
+  margin-left: 2.2rem;
   flex: 1;
   font-size: 14px;
 }
