@@ -1,4 +1,18 @@
-.guest-modal { padding: 16px; max-width: 420px; }
-.guest-modal__header { display: flex; align-items: center; gap: 8px; }
-.guest-modal__message { margin: 12px 0 20px; line-height: 1.5; }
-.guest-modal__actions { display: flex; gap: 10px; justify-content: flex-end; }
+.guest-modal {
+  padding: 16px;
+  max-width: 420px;
+}
+.guest-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guest-modal__message {
+  margin: 12px 0 20px;
+  line-height: 1.5;
+}
+.guest-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
