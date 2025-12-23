@@ -82,54 +82,6 @@
     }
   ],
 
-  "companies": [
-    {
-      "id": "1",
-      "name": "EcoMove",
-      "email": "contact@ecomove.pe",
-      "phone": "+5112456789",
-      "address": "Av. El Sol 123, Miraflores, Lima",
-      "logo": "assets/companies/ecomove-logo.png",
-      "website": "https://ecomove.pe",
-      "description": "Líder en movilidad sostenible en Lima",
-      "vehicles": ["1", "2", "3", "7", "8"],
-      "serviceAreas": ["1", "2", "3", "8"],
-      "rating": 4.7,
-      "isActive": true,
-      "establishedYear": 2020
-    },
-    {
-      "id": "2",
-      "name": "UrbanRide",
-      "email": "info@urbanride.pe",
-      "phone": "+5113567890",
-      "address": "Jr. Lampa 456, Lima Centro",
-      "logo": "assets/companies/urbanride-logo.png",
-      "website": "https://urbanride.pe",
-      "description": "Conectando la ciudad con tecnología",
-      "vehicles": ["4", "5", "6"],
-      "serviceAreas": ["4", "5", "6", "7"],
-      "rating": 4.5,
-      "isActive": true,
-      "establishedYear": 2019
-    },
-    {
-      "id": "3",
-      "name": "LimaScooters",
-      "email": "support@limascooters.pe",
-      "phone": "+5114567891",
-      "address": "Av. Brasil 789, Pueblo Libre",
-      "logo": "assets/companies/limascooters-logo.png",
-      "website": "https://limascooters.pe",
-      "description": "Tu mejor opción para moverte por Lima",
-      "vehicles": ["9", "10"],
-      "serviceAreas": ["9", "10"],
-      "rating": 4.3,
-      "isActive": true,
-      "establishedYear": 2021
-    }
-  ],
-
   "vehicles": [
     {
       "id": "1",
@@ -1059,37 +1011,6 @@
       "relatedEntityType": "booking",
       "icon": "bell",
       "color": "#EF4444"
-    }
-  ],
-
-  "favorites": [
-    {
-      "id": "fav-001",
-      "userId": "1",
-      "vehicleId": "1",
-      "addedAt": "2025-09-15T10:00:00Z",
-      "notes": "Mi scooter favorito, siempre tiene buena batería"
-    },
-    {
-      "id": "fav-002",
-      "userId": "1",
-      "vehicleId": "7",
-      "addedAt": "2025-09-22T14:30:00Z",
-      "notes": "Muy rápido y cómodo"
-    },
-    {
-      "id": "fav-003",
-      "userId": "3",
-      "vehicleId": "10",
-      "addedAt": "2025-09-10T09:00:00Z",
-      "notes": "El mejor diseño"
-    },
-    {
-      "id": "fav-004",
-      "userId": "2",
-      "vehicleId": "5",
-      "addedAt": "2025-10-01T11:00:00Z",
-      "notes": "Buena relación calidad-precio"
     }
   ],
 

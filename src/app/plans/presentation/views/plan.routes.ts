@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { guestActionGuard } from '../../../auth/infrastructure/guest-action.guard';
 
 export const PLAN_ROUTES: Routes = [
   {
@@ -11,7 +12,8 @@ export const PLAN_ROUTES: Routes = [
       },
       {
         path: 'payment/:id',
-        loadComponent: () => import('./plan-payment/plan-payment').then(m => m.PlanPayment)
+        loadComponent: () => import('./plan-payment/plan-payment').then(m => m.PlanPayment),
+        canActivate: [guestActionGuard]
       }
     ]
   }

@@ -1,6 +1,6 @@
 {
   "/api/*": {
-    "target": "https://db-weride-4.onrender.com",
+    "target": "https://db-weride.onrender.com",
     "secure": true,
     "changeOrigin": true,
     "logLevel": "debug",

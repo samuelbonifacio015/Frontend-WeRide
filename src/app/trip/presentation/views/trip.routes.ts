@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { guestActionGuard } from '../../../auth/infrastructure/guest-action.guard';
 
 export const TRIP_ROUTES: Routes = [
   {
@@ -20,6 +21,7 @@ export const TRIP_ROUTES: Routes = [
   },
   {
     path: 'history',
-    loadComponent: () => import('./trip-history/trip-history').then(m => m.TripHistory)
+    loadComponent: () => import('./trip-history/trip-history').then(m => m.TripHistory),
+    canActivate: [guestActionGuard]
   }
 ];

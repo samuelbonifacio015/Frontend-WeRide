@@ -21,6 +21,7 @@ interface AuthState {
   error: string | null;
   verificationCodeSent: boolean;
   registrationStep: 'phone' | 'verification' | 'details' | 'completed';
+  isGuest: boolean;
 }
 
 const initialState: AuthState = {
@@ -29,7 +30,8 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   verificationCodeSent: false,
-  registrationStep: 'phone'
+  registrationStep: 'phone',
+  isGuest: false
 };
 
 export const AuthStore = signalStore(
@@ -54,7 +56,8 @@ export const AuthStore = signalStore(
                   session,
                   currentUser: session.user,
                   isLoading: false,
-                  error: null
+                  error: null,
+                  isGuest: !!session?.isGuest
                 });
               }),
               catchError((error) => {
@@ -82,7 +85,8 @@ export const AuthStore = signalStore(
                   session,
                   currentUser: session.user,
                   isLoading: false,
-                  error: null
+                  error: null,
+                  isGuest: !!session?.isGuest
                 });
               }),
               catchError((error) => {
@@ -107,7 +111,8 @@ export const AuthStore = signalStore(
                   session,
                   currentUser: session.user,
                   isLoading: false,
-                  error: null
+                  error: null,
+                  isGuest: !!session?.isGuest
                 });
               }),
               catchError((error) => {
@@ -133,7 +138,8 @@ export const AuthStore = signalStore(
               session,
               currentUser: null,
               isLoading: false,
-              error: null
+              error: null,
+              isGuest: !!session?.isGuest
             });
           },
           error: (err) => {
@@ -216,7 +222,7 @@ export const AuthStore = signalStore(
       },
 
       setSession(session: any) {
-        patchState(store, { session, currentUser: session.user });
+        patchState(store, { session, currentUser: session.user, isGuest: !!session?.isGuest });
 
         if (typeof window !== 'undefined') {
           localStorage.setItem('session', JSON.stringify(session));

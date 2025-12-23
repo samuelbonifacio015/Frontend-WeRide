@@ -22,6 +22,11 @@
     "notAvailable": "No Disponible",
     "and": "y"
   },
+  "guestModal": {
+    "title": "¡Alto!",
+    "message": "No puedes realizar reservas, programar viajes ni pagar planes como invitado. Inicia sesión para desbloquear estas opciones.",
+    "loginCta": "Iniciar sesión"
+  },
   "navigation": {
     "home": "Inicio",
     "garage": "Garaje",
@@ -29,7 +34,7 @@
     "plans": "Planes",
     "trip": "Viaje",
     "bookings": "Reservas",
-    "user": "User"
+    "user": "Usuario"
   },
   "header": {
     "notifications": {

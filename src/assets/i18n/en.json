@@ -22,6 +22,11 @@
     "notAvailable": "Not Available",
     "and": "and"
   },
+  "guestModal": {
+    "title": "Stop!",
+    "message": "You can't make bookings, schedule trips or pay plans as a guest. Log in to unlock these options.",
+    "loginCta": "Log In"
+  },
   "navigation": {
     "home": "Home",
     "garage": "Garage",

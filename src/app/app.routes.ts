@@ -7,6 +7,7 @@ import { GARAGE_ROUTES } from './garage/garage.routes';
 import { USER_ROUTES } from './user/user.routes';
 import { AUTH_ROUTES } from './auth/auth.routes';
 import { authGuard } from './auth/infrastructure/auth.guard';
+import { guestActionGuard } from './auth/infrastructure/guest-action.guard';
 
 export const routes: Routes = [
   {
@@ -33,7 +34,8 @@ export const routes: Routes = [
       },
       {
         path: 'schedule-unlock',
-        loadComponent: () => import('./booking/presentation/views/schedule-unlock/schedule-unlock').then(m => m.ScheduleUnlockComponent)
+        loadComponent: () => import('./booking/presentation/views/schedule-unlock/schedule-unlock').then(m => m.ScheduleUnlockComponent),
+        canActivate: [guestActionGuard]
       },
       {
         path: 'trip',

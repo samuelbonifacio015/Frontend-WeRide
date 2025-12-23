@@ -1,0 +1,15 @@
+<div class="guest-modal">
+  <div class="guest-modal__header">
+    <mat-icon>block</mat-icon>
+    <h2>{{ 'guestModal.title' | translate }}</h2>
+  </div>
+  <p class="guest-modal__message">
+    {{ 'guestModal.message' | translate }}
+  </p>
+  <div class="guest-modal__actions">
+    <button mat-raised-button color="primary" (click)="goToLogin()">
+      {{ 'guestModal.loginCta' | translate }}
+    </button>
+    <button mat-button (click)="close()">{{ 'common.close' | translate }}</button>
+  </div>
+</div>
