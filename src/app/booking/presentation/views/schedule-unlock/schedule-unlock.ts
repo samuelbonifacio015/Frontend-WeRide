@@ -21,6 +21,7 @@ import { QrScannerModal } from '../../../../garage/presentation/views/qr-scanner
 import { BookingSuccessModal } from '../../../../public/components/booking-success-modal/booking-success-modal';
 import { DraftBookingService } from '../../../application/draft-booking.service';
 import { BookingDraft } from '../../../domain/model/booking-draft.entity';
+import { AuthStore } from '../../../../auth/application/auth.store';
 
 @Component({
   selector: 'app-schedule-unlock',
@@ -37,6 +38,7 @@ export class ScheduleUnlockComponent implements OnInit {
   private dialog = inject(MatDialog);
   private unlockRequestsApi = inject(UnlockRequestsApiEndpoint);
   private draftService = inject(DraftBookingService);
+  private authStore = inject(AuthStore);
 
   availabilityError: string = '';
   vehicleAvailable: boolean = false;
@@ -162,6 +164,20 @@ export class ScheduleUnlockComponent implements OnInit {
   }
 
   /**
+   * Normaliza la respuesta del endpoint de bookings a un arreglo
+   */
+  private normalizeBookingsResponse(resp: any): any[] {
+    // Manejar posibles envoltorios de HttpClient y estructuras comunes
+    if (resp?.body) return this.normalizeBookingsResponse(resp.body);
+    if (Array.isArray(resp)) return resp;
+    if (resp?.data && Array.isArray(resp.data)) return resp.data;
+    if (resp?.items && Array.isArray(resp.items)) return resp.items;
+    if (resp?.content && Array.isArray(resp.content)) return resp.content;
+    if (resp && typeof resp === 'object') return [resp];
+    return [];
+  }
+
+  /**
    * Valida que la fecha y hora sean futuras
    */
   private validateDateTime(): boolean {
@@ -186,35 +202,25 @@ export class ScheduleUnlockComponent implements OnInit {
     }
 
     try {
-      const bookings = await firstValueFrom(this.bookingsApi.getByVehicleId(this.selectedVehicle.id));
+      const resp = await firstValueFrom(this.bookingsApi.getByVehicleId(this.selectedVehicle.id));
+      const bookings = this.normalizeBookingsResponse(resp);
 
       // Filtrar bookings activos (pending, confirmed)
-      const activeBookings = bookings.filter(b =>
-        b.status === 'pending' || b.status === 'confirmed'
+      const activeBookings = bookings.filter((b: any) =>
+        b.status === 'pending' || b.status === 'confirmed' || b.status === 'PENDING' || b.status === 'CONFIRMED'
       );
 
-      // Verificar solapamiento de fechas
       for (const booking of activeBookings) {
         const bookingStart = new Date(booking.startDate);
         const bookingEnd = booking.endDate ? new Date(booking.endDate) : null;
 
-        // Verificar si hay solapamiento
         if (bookingEnd) {
-          // Hay solapamiento si:
-          // - La nueva reserva empieza antes de que termine la existente Y
-          // - La nueva reserva termina después de que empiece la existente
           if (startDate < bookingEnd && endDate > bookingStart) {
             const conflictStart = bookingStart.toLocaleString('es-ES', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit'
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             });
             const conflictEnd = bookingEnd.toLocaleString('es-ES', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit'
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             });
 
             return {
@@ -223,7 +229,6 @@ export class ScheduleUnlockComponent implements OnInit {
             };
           }
         } else {
-          // Si no hay endDate, verificar solapamiento con startDate
           if (startDate < bookingStart && endDate > bookingStart) {
             return {
               available: false,
@@ -281,7 +286,9 @@ export class ScheduleUnlockComponent implements OnInit {
    */
   private async createUnlockRequest(bookingId: string, scheduledUnlockTime: Date, method: 'manual' | 'qr_code'): Promise<UnlockRequest | null> {
     try {
-      const userId = '1'; // TODO: Get from AuthService
+      const currentUser = this.authStore.currentUser();
+      const sessionUser = this.authStore.session()?.user;
+      const userId = currentUser?.id || sessionUser?.id || '1';
       const location = await this.getCurrentLocation();
       const unlockCode = this.generateUnlockCode();
 
@@ -291,12 +298,12 @@ export class ScheduleUnlockComponent implements OnInit {
         bookingId: bookingId,
         requestedAt: new Date().toISOString(),
         scheduledUnlockTime: scheduledUnlockTime.toISOString(),
-        actualUnlockTime: null,
         status: 'pending' as const,
         method: method,
         location: location,
         unlockCode: unlockCode,
         attempts: 0,
+        actualUnlockTime: null,
         errorMessage: null
       };
 
@@ -525,34 +532,110 @@ export class ScheduleUnlockComponent implements OnInit {
       return;
     }
 
-    // Get current user ID (replace with actual user service)
-    const userId = '1'; // TODO: Get from AuthService
+    // Obtener usuario real
+    const currentUser = this.authStore.currentUser();
+    const sessionUser = this.authStore.session()?.user;
+    const userId = currentUser?.id || sessionUser?.id || '1';
 
-    // Create booking data with explicit status type
+    // Estado en minúsculas según backend
     const status: 'pending' | 'confirmed' | 'completed' | 'cancelled' = this.isImmediate ? 'confirmed' : 'pending';
 
-    const bookingData = {
+    // Mapear ubicaciones válidas: si el vehículo trae un nombre de lugar,
+    // usar un ID seguro por defecto ('1'). Si ya es numérico, respetarlo.
+    const rawLoc = this.selectedVehicle.location;
+    const isNumericId = rawLoc && /^\d+$/.test(String(rawLoc));
+    const startLocId = isNumericId ? String(rawLoc) : '1';
+    const endLocId = startLocId;
+
+    // 1. Función auxiliar para fechas (si no la pusiste antes)
+    const toLocalISOString = (date: Date): string => {
+        return date.toISOString().slice(0, -1);
+    };
+
+    // 2. Definimos bookingData como 'any' para evitar conflictos estrictos de TS
+    // y poder enviar nulls o omitir 'issues' sin que el compilador se queje.
+    const bookingData: any = {
       userId: userId,
       vehicleId: this.selectedVehicle.id,
-      startLocationId: '1', // TODO: Get current location
-      endLocationId: '1', // TODO: Will be updated on trip end
-      reservedAt: new Date().toISOString(),
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      actualStartDate: this.isImmediate ? new Date().toISOString() : null,
+      startLocationId: '1', 
+      endLocationId: '1',
+      reservedAt: toLocalISOString(new Date()),
+      startDate: toLocalISOString(startDate),
+      endDate: toLocalISOString(endDate),
+      actualStartDate: this.isImmediate ? toLocalISOString(new Date()) : null,
       actualEndDate: null,
       status: status,
-      totalCost: parseFloat(this.calculateTotal()),
+      // Usamos parseFloat o null si no hay valor
+      totalCost: this.calculateTotal() ? parseFloat(this.calculateTotal()) : null,
       discount: 0,
-      finalCost: parseFloat(this.calculateTotal()),
-      paymentMethod: 'card' as const,
-      paymentStatus: 'pending' as const,
+      finalCost: this.calculateTotal() ? parseFloat(this.calculateTotal()) : null,
+      paymentMethod: 'card',
+      paymentStatus: 'pending',
       distance: null,
       duration: this.duration * 60,
       averageSpeed: null,
-      rating: null,
-      issues: []
+      rating: null
+      // issues: [] <--- NO LO INCLUIMOS. El backend fallará si lo enviamos.
     };
+
+    console.log('Enviando payload:', JSON.stringify(bookingData, null, 2));
+
+    // 3. Usamos 'as any' en la llamada para saltar la validación de la interfaz BookingResponse
+    this.bookingsApi.create(bookingData as any).subscribe({
+      next: async (response) => {
+        // ... (resto de tu código exitoso igual) ...
+        const booking = toDomainBooking(response);
+        this.activeBookingService.setActiveBooking(booking);
+        this.bookingStore.addBooking(booking);
+        
+        const message = this.isImmediate
+          ? 'Reserva confirmada. ¡Disfruta tu viaje!'
+          : 'Reserva programada exitosamente';
+
+        this.snackBar.open(message, 'Cerrar', {
+          duration: 2000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['success-snackbar']
+        });
+
+        await this.openUnlockMethodSelection(booking);
+      },
+      error: (error) => {
+        console.error('Error creating booking:', error);
+        // ... (tu manejo de errores) ...
+        let errorMessage = 'Error al crear la reserva. Intenta de nuevo.';
+        if (error.status === 409) {
+          errorMessage = 'El vehículo ya está reservado en ese horario.';
+        } else if (error.status === 400) {
+          errorMessage = 'Datos inválidos. Revisa la consola para ver el payload.';
+        }
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 4000,
+          panelClass: ['error-snackbar']
+        });
+        this.availabilityError = errorMessage;
+      }
+    });
+
+    // Para reservas confirmadas inmediatas, incluir costos y duración planificada
+    // Valores numéricos obligatorios según contrato del backend
+    const plannedDurationMinutes = this.duration * 60;
+    if (status === 'confirmed') {
+      bookingData.totalCost = parseFloat(this.calculateTotal());
+      bookingData.discount = 0;
+      bookingData.finalCost = parseFloat(this.calculateTotal());
+      bookingData.duration = plannedDurationMinutes;
+    } else {
+      // Para 'pending', usar nulls para costos y duración según contrato
+      bookingData.totalCost = null;
+      bookingData.discount = null;
+      bookingData.finalCost = null;
+      bookingData.duration = null;
+    }
+
+    bookingData.actualStartDate = this.isImmediate ? new Date().toISOString() : null;
+    bookingData.actualEndDate = null;
 
     // Create booking via API
     this.bookingsApi.create(bookingData).subscribe({
@@ -579,7 +662,7 @@ export class ScheduleUnlockComponent implements OnInit {
         await this.openUnlockMethodSelection(booking);
       },
       error: (error) => {
-        console.error('Error creating booking:', error);
+        console.error('Error creating booking:', error, (error as any)?.error);
         let errorMessage = 'Error al crear la reserva. Intenta de nuevo.';
 
         // Mensajes de error más específicos
@@ -610,8 +693,13 @@ export class ScheduleUnlockComponent implements OnInit {
 
     this.isSavingDraft = true;
 
+    const currentUser = this.authStore.currentUser();
+    const sessionUser = this.authStore.session()?.user;
+    const rawUserId = currentUser?.id || sessionUser?.id;
+    const safeUserId = rawUserId && !String(rawUserId).startsWith('temp-') ? rawUserId : '1';
+
     const draftData: Partial<BookingDraft> = {
-      userId: '1',
+      userId: safeUserId,
       vehicleId: this.selectedVehicle.id,
       selectedDate: this.selectedDate,
       unlockTime: this.unlockTime,
@@ -632,7 +720,7 @@ export class ScheduleUnlockComponent implements OnInit {
         
         this.isSavingDraft = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error saving draft:', error);
         this.snackBar.open('Error al guardar borrador', 'Cerrar', {
           duration: 3000,
@@ -659,7 +747,7 @@ export class ScheduleUnlockComponent implements OnInit {
       next: () => {
         this.snackBar.open('Borrador eliminado', 'Cerrar', { duration: 2000 });
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error deleting draft:', error);
         this.snackBar.open('Error al eliminar borrador', 'Cerrar', { duration: 3000 });
       }

@@ -21,6 +21,9 @@ export class RegisterComponent implements OnInit {
   phone = signal('');
   firstName = signal('');
   lastName = signal('');
+  
+  email = signal('');
+  password = signal('');
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -35,11 +38,14 @@ export class RegisterComponent implements OnInit {
   }
 
   continue() {
-    if (this.firstName() && this.lastName() && this.phone()) {
+    if (this.firstName() && this.lastName() && this.phone() && this.email() && this.password()) {
+      
       const registrationData = new RegistrationData(
         this.firstName(),
         this.lastName(),
-        this.phone()
+        this.phone(),
+        this.email(),    
+        this.password()  
       );
 
       this.authStore.registerUser(registrationData);
@@ -49,6 +55,8 @@ export class RegisterComponent implements OnInit {
           this.router.navigate(['/home']);
         }
       }, 500);
+    } else {
+      console.warn('Faltan campos obligatorios');
     }
   }
 }

@@ -29,7 +29,6 @@ export class EmailLoginComponent {
   private actionAttempted = signal(false);
 
   constructor() {
-    // Effect to navigate to home when login/register is successful
     effect(() => {
       const session = this.authStore.session();
       const currentUser = this.authStore.currentUser();
@@ -37,12 +36,12 @@ export class EmailLoginComponent {
       const isLoading = this.authStore.isLoading();
 
       if (this.actionAttempted() && !isLoading) {
-        // Si hay sesión válida, redirigir
         if (session && session.isValid && !error) {
           this.router.navigate(['/home']);
           this.actionAttempted.set(false);
         }
         // Si se registró un usuario pero no hay sesión, crear sesión automáticamente
+        // (Nota: Esto requerirá que el endpoint de registro devuelva token en el futuro)
         else if (this.isRegisterMode() && currentUser && !error && !session) {
           this.createSessionForRegisteredUser(currentUser);
         }
@@ -51,13 +50,11 @@ export class EmailLoginComponent {
   }
 
   private createSessionForRegisteredUser(user: User) {
-    // Crear sesión para el usuario registrado
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
     const token = 'token_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
     const session = new AuthSession(user, token, expiresAt, false);
 
-    // Guardar en localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_session', JSON.stringify({
         user: user,
@@ -67,7 +64,6 @@ export class EmailLoginComponent {
       }));
     }
 
-    // Establecer sesión en el store
     this.authStore.setSession(session);
   }
 
@@ -90,71 +86,34 @@ export class EmailLoginComponent {
 
   continue() {
     if (this.isRegisterMode()) {
-      // Modo registro
       if (this.email() && this.password() && this.firstName() && this.lastName()) {
         const registrationData = new RegistrationData(
           this.firstName(),
           this.lastName(),
-          '', // phone no requerido para email
-          this.email()
+          '',             
+          this.email(),   
+          this.password() 
         );
+        
         this.actionAttempted.set(true);
         this.authStore.registerUser(registrationData);
       }
     } else {
-      // Modo inicio de sesión - acepta cualquier credencial
       if (this.email() && this.password()) {
-        this.loginWithAnyCredentials();
+        this.login();
       }
     }
   }
 
-  private loginWithAnyCredentials() {
-    // Crear un usuario temporal con las credenciales proporcionadas
-    const tempUser = new User(
-      `temp-${Date.now()}`,
-      this.email().split('@')[0] || 'Usuario',
+  // Metodo de login separado para claridad
+  private login() {
+    const credentials = new AuthCredentials(
       this.email(),
-      '',
-      'basic-plan-001',
-      true,
-      'assets/users/default.jpg',
-      '',
-      '',
-      '',
-      'verified',
-      new Date().toISOString(),
-      {
-        language: 'es',
-        notifications: true,
-        theme: 'light'
-      },
-      {
-        totalTrips: 0,
-        totalDistance: 0,
-        totalSpent: 0,
-        averageRating: 0
-      }
+      this.password()
     );
 
-    // Crear sesión directamente
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24);
-    const token = 'token_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
-    const session = new AuthSession(tempUser, token, expiresAt, false);
-
-    // Guardar en localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_session', JSON.stringify({
-        user: tempUser,
-        token: session.token,
-        expiresAt: session.expiresAt.toISOString(),
-        isGuest: false
-      }));
-    }
-
-    // Establecer sesión en el store
-    this.authStore.setSession(session);
     this.actionAttempted.set(true);
+
+    this.authStore.loginWithEmail(credentials); 
   }
 }

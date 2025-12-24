@@ -55,13 +55,22 @@ export class HeaderComponent implements OnInit {
   }
 
   loadNotifications() {
-    this.notificationsApi.getAll().subscribe({
+    const currentUser = this.authStore.currentUser();
+    const sessionUser = this.authStore.session()?.user;
+    const userId = currentUser?.id || sessionUser?.id || '1';
+
+    this.notificationsApi.getByUserId(userId).subscribe({
       next: (responses: NotificationResponse[]) => {
         const notificationList = responses.map(r => toDomainNotification(r));
         const sortedNotifications = notificationList
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .slice(0, 10);
         this.notifications.set(sortedNotifications);
+      },
+      error: (error) => {
+        // Fallback silencioso si el backend exige userId
+        console.error('Error cargando notificaciones:', error);
+        this.notifications.set([]);
       }
     });
   }

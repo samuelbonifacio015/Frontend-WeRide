@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { BookingResponse, BookingsListResponse } from './bookings-response';
 import { environment } from '../../../environments/environment';
@@ -31,26 +31,26 @@ export class BookingsApiEndpoint {
 
   // Crear una nueva reserva
   create(booking: Omit<BookingResponse, 'id'>): Observable<BookingResponse> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:33',message:'POST request sent',data:{payload:booking,baseUrl:this.baseUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
-    return this.http.post<BookingResponse>(this.baseUrl, booking).pipe(
-      map(response => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:36',message:'POST response received in endpoint',data:{response,responseType:typeof response,hasId:'id' in response,hasBookingId:'bookingId' in response,keys:Object.keys(response || {})},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        if (response && 'bookingId' in response && !('id' in response)) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:39',message:'Normalizing bookingId to id',data:{bookingId:(response as any).bookingId},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
+    return this.http.post<any>(this.baseUrl, booking).pipe(
+      map((raw) => {
+        // Normalizar respuestas comunes del backend
+        const response = raw?.body ?? raw?.data ?? raw;
+
+        // Si viene envuelto en { booking: {...} }
+        const core = response?.booking ?? response;
+
+        // Mapear bookingId -> id si el backend usa esa clave
+        if (core && 'bookingId' in core && !('id' in core)) {
+          core.id = core.bookingId;
         }
-        return response;
+
+        return core as BookingResponse;
       }),
       catchError(error => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'bookings-api-endpoint.ts:45',message:'POST error in endpoint',data:{error:error?.error,status:error?.status,message:error?.message,fullError:JSON.stringify(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
-        throw error;
+        const status = error?.status;
+        const body = error?.error;
+        console.error('[BookingsApiEndpoint.create] Request failed', { status, body, booking });
+        return throwError(() => error);
       })
     );
   }
@@ -77,6 +77,7 @@ export class BookingsApiEndpoint {
 
   // Obtener reservas por vehicleId
   getByVehicleId(vehicleId: string): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}?vehicleId=${vehicleId}`);
+    // Ajuste: el backend expone el filtro de vehículo como ruta path-style
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/vehicle/${vehicleId}`);
   }
 }

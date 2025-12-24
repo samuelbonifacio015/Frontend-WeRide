@@ -53,6 +53,24 @@
         class="form-input">
     </div>
 
+    <div class="form-group">
+      <label>Email</label>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        placeholder="ejemplo@weride.com"
+        class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="********"
+        class="form-input">
+    </div>
+
     <div class="terms">
       <p>{{ 'auth.login.terms' | translate }} <a href="#" class="link">{{ 'auth.login.privacyPolicy' | translate }}</a> {{ 'common.and' | translate }} <a href="#" class="link">{{ 'auth.login.termsOfUse' | translate }}</a> {{ 'auth.login.ofWeRide' | translate }}</p>
     </div>
@@ -60,4 +78,3 @@
     <button class="btn-primary" (click)="continue()">{{ 'common.next' | translate }}</button>
   </div>
 </div>
-
