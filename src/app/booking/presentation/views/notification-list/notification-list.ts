@@ -6,8 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
-import { NotificationsApiEndpoint } from '../../../infraestructure/notifications-api-endpoint';
-import { NotificationResponse } from '../../../infraestructure/notifications-response';
+import { NotificationsApiEndpoint } from '../../../infrastructure/notifications-api-endpoint';
+import { NotificationResponse } from '../../../infrastructure/notifications-response';
 
 @Component({
   selector: 'app-notification-list',

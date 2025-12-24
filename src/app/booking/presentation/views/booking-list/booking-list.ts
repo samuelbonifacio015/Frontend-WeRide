@@ -10,9 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { BookingsApiEndpoint } from '../../../infraestructure/bookings-api-endpoint';
-import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
-import { LocationsApiEndpoint } from '../../../infraestructure/locations-api-endpoint';
+import { BookingsApiEndpoint } from '../../../infrastructure/bookings-api-endpoint';
 import { BookingStorageService } from '../../../application/booking-storage.service';
 import { BookingStore } from '../../../application/booking.store';
 import { ActiveBookingService } from '../../../application/active-booking.service';
@@ -20,6 +18,9 @@ import { BookingConfirmationModal } from '../booking-confirmation-modal/booking-
 import { UnlockMethodSelectionModal } from '../unlock-method-selection-modal/unlock-method-selection-modal';
 import { BookingFilterService } from '../../../application/booking-filter.service';
 import { BookingFilter } from '../../../domain/model/booking-filter.model';
+import { VehicleService } from '../../../../core/services/vehicle.service';
+import { LocationService } from '../../../../core/services/location.service';
+import { Vehicle, Location } from '../../../../core/services/api.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -55,8 +56,8 @@ interface BookingView {
 })
 export class BookingListComponent implements OnInit {
   private bookingsApi = inject(BookingsApiEndpoint);
-  private vehiclesApi = inject(VehiclesApiEndpoint);
-  private locationsApi = inject(LocationsApiEndpoint);
+  private vehicleService = inject(VehicleService);
+  private locationService = inject(LocationService);
   private bookingStorage = inject(BookingStorageService);
   private bookingStore = inject(BookingStore);
   private activeBookingService = inject(ActiveBookingService);
@@ -90,14 +91,14 @@ export class BookingListComponent implements OnInit {
 
     forkJoin({
       bookings: this.bookingsApi.getAll().pipe(catchError(() => of([]))),
-      vehicles: this.vehiclesApi.getAll().pipe(catchError(() => of([]))),
-      locations: this.locationsApi.getAll().pipe(catchError(() => of([])))
+      vehicles: this.vehicleService.loadVehicles().pipe(catchError(() => of([]))),
+      locations: this.locationService.loadLocations().pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ bookings, vehicles, locations }) => {
+      next: ({ bookings, vehicles, locations }: { bookings: any[], vehicles: Vehicle[], locations: Location[] }) => {
         try {
           const bookingsArray = Array.isArray(bookings) ? bookings : [];
-          const vehiclesArray = Array.isArray(vehicles) ? vehicles : [];
-          const locationsArray = Array.isArray(locations) ? locations : [];
+          const vehiclesArray: Vehicle[] = Array.isArray(vehicles) ? vehicles : [];
+          const locationsArray: Location[] = Array.isArray(locations) ? locations : [];
           const allBookings = [...localBookings, ...bookingsArray];
           const uniqueBookings = Array.from(new Map(allBookings.map(b => [b.id, b])).values());
 
@@ -259,8 +260,8 @@ export class BookingListComponent implements OnInit {
         return;
       }
 
-      this.vehiclesApi.getAll().subscribe({
-        next: (vehicles) => {
+      this.vehicleService.loadVehicles().subscribe({
+        next: (vehicles: Vehicle[]) => {
           const vehicle = vehicles.find(v => v.id === bookingView.vehicleId);
 
           if (!vehicle) {

@@ -3,7 +3,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { ActiveBookingService } from './active-booking.service';
-import { NotificationsApiEndpoint } from '../infraestructure/notifications-api-endpoint';
+import { NotificationsApiEndpoint } from '../infrastructure/notifications-api-endpoint';
+import { NotificationResponse } from '../infrastructure/notifications-response';
 import { Booking } from '../domain/model/booking.entity';
 import { BookingEndingModal } from '../presentation/views/booking-ending-modal/booking-ending-modal';
 import { firstValueFrom } from 'rxjs';
@@ -232,7 +233,7 @@ export class BookingNotificationService implements OnDestroy {
     relatedEntityId?: string
   ): Promise<void> {
     try {
-      await firstValueFrom(this.notificationsApi.create({
+      await firstValueFrom<NotificationResponse>(this.notificationsApi.create({
         userId,
         title,
         message,

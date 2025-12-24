@@ -9,10 +9,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { LanguageSwitcher } from '../language-switcher/language-switcher';
-import { NotificationsApiEndpoint } from '../../../booking/infraestructure/notifications-api-endpoint';
+import { NotificationsApiEndpoint } from '../../../booking/infrastructure/notifications-api-endpoint';
 import { Notification } from '../../../booking/domain/model/notification';
-import { toDomainNotification } from '../../../booking/infraestructure/notification-assembler';
-import { NotificationResponse } from '../../../booking/infraestructure/notifications-response';
+import { toDomainNotification } from '../../../booking/infrastructure/notification-assembler';
+import { NotificationResponse } from '../../../booking/infrastructure/notifications-response';
 import { UserStore } from '../../../user/application/user.store';
 import { AuthStore } from '../../../auth/application/auth.store';
 

@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
 import { Vehicle } from '../../../domain/model/vehicle.model';
 import { Booking } from '../../../../booking/domain/model/booking.entity';
 import { UnlockRequest } from '../../../../booking/domain/model/unlockRequest.entity';
-import { UnlockRequestsApiEndpoint } from '../../../../booking/infraestructure/unlockRequests-api-endpoint';
+import { UnlockRequestsApiEndpoint } from '../../../../booking/infrastructure/unlockRequests-api-endpoint';
 import { BookingStore } from '../../../../booking/application/booking.store';
 import { TripStore } from '../../../../trip/application/trip.store';
 import { firstValueFrom } from 'rxjs';

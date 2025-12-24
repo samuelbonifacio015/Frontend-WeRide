@@ -6,10 +6,10 @@ import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
 import { TripStore } from '../../../../trip/application/trip.store';
 import { ActiveBookingService } from '../../../application/active-booking.service';
-import { UnlockRequestsApiEndpoint } from '../../../infraestructure/unlockRequests-api-endpoint';
-import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
-import { toDomainUnlockRequest } from '../../../infraestructure/unlockRequest-assembler';
-import { toDomainVehicle } from '../../../infraestructure/vehicle-assembler';
+import { UnlockRequestsApiEndpoint } from '../../../infrastructure/unlockRequests-api-endpoint';
+import { toDomainUnlockRequest } from '../../../infrastructure/unlockRequest-assembler';
+import { VehicleService } from '../../../../core/services/vehicle.service';
+import { Vehicle } from '../../../../core/services/api.service';
 import { firstValueFrom, catchError, of } from 'rxjs';
 
 interface VehicleInfo {
@@ -44,7 +44,7 @@ export class VehicleUnlockStatusComponent implements OnInit, OnDestroy {
   private tripStore = inject(TripStore);
   private activeBookingService = inject(ActiveBookingService);
   private unlockRequestsApi = inject(UnlockRequestsApiEndpoint);
-  private vehiclesApi = inject(VehiclesApiEndpoint);
+  private vehicleService = inject(VehicleService);
 
   isActiveTrip = computed(() => this.tripStore.isActiveTrip());
   currentVehicle = computed(() => this.tripStore.currentVehicle());
@@ -183,27 +183,38 @@ export class VehicleUnlockStatusComponent implements OnInit, OnDestroy {
         unlockStatus = this.mapUnlockStatus(mostRecentRequest.status);
       }
 
-      const vehicleResponse = await firstValueFrom(
-        this.vehiclesApi.getById(booking ? booking.vehicleId : this.currentVehicle()?.id ?? '').pipe(
-          catchError(() => {
-            const tripVehicle = this.currentVehicle();
-            if (tripVehicle) {
-              return of({
-                id: tripVehicle.id,
-                brand: tripVehicle.brand || '',
-                model: tripVehicle.model || '',
-                licensePlate: tripVehicle.licensePlate || '',
-                battery: tripVehicle.battery || 0
-              } as any);
-            }
-            return of(null);
-          })
-        )
-      );
+      const vehicleId = booking ? booking.vehicleId : this.currentVehicle()?.id ?? '';
+      let vehicle: Vehicle | undefined;
 
-      if (vehicleResponse) {
-        const vehicle = toDomainVehicle(vehicleResponse);
+      // Intentar obtener del servicio, fallback a vehículo del trip
+      const cachedVehicles = this.vehicleService.getCachedVehicles();
+      vehicle = cachedVehicles.find(v => v.id === vehicleId);
 
+      if (!vehicle) {
+        // Si no está en caché, intentar cargar
+        try {
+          const vehicles = await firstValueFrom(
+            this.vehicleService.loadVehicles().pipe(
+              catchError(() => of([]))
+            )
+          );
+          vehicle = vehicles.find(v => v.id === vehicleId);
+        } catch {
+          // Fallback a datos del trip
+          const tripVehicle = this.currentVehicle();
+          if (tripVehicle) {
+            vehicle = {
+              id: tripVehicle.id,
+              brand: tripVehicle.brand || '',
+              model: tripVehicle.model || '',
+              licensePlate: tripVehicle.licensePlate || '',
+              battery: tripVehicle.battery || 0
+            } as Vehicle;
+          }
+        }
+      }
+
+      if (vehicle) {
         this.vehicleInfo.set({
           id: vehicle.id,
           battery: vehicle.battery,

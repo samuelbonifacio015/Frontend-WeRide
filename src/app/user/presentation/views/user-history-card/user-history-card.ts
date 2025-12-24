@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { MatIcon } from '@angular/material/icon';
 import { UserStore } from '../../../application/user.store';
 import { TripsApiEndpoint } from '../../../../trip/infrastructure/trips-api-endpoint';
-import { BookingsApiEndpoint } from '../../../../booking/infraestructure/bookings-api-endpoint';
+import { BookingsApiEndpoint } from '../../../../booking/infrastructure/bookings-api-endpoint';
 import { UserSettingsStateService } from '../../../application/user-settings-state.service';
 
 @Component({

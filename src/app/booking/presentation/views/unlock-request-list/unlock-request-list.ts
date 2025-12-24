@@ -5,9 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
-import { UnlockRequestsApiEndpoint } from '../../../infraestructure/unlockRequests-api-endpoint';
-import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
-import { UnlockRequestResponse } from '../../../infraestructure/unlockRequests-response';
+import { UnlockRequestsApiEndpoint } from '../../../infrastructure/unlockRequests-api-endpoint';
+import { UnlockRequestResponse } from '../../../infrastructure/unlockRequests-response';
+import { VehicleService } from '../../../../core/services/vehicle.service';
+import { Vehicle } from '../../../../core/services/api.service';
 import { forkJoin } from 'rxjs';
 
 interface UnlockRequestView {
@@ -29,7 +30,7 @@ interface UnlockRequestView {
 })
 export class UnlockRequestList implements OnInit {
   private unlockRequestsApi = inject(UnlockRequestsApiEndpoint);
-  private vehiclesApi = inject(VehiclesApiEndpoint);
+  private vehicleService = inject(VehicleService);
 
   unlockRequests: UnlockRequestView[] = [];
   isLoading = true;
@@ -42,11 +43,11 @@ export class UnlockRequestList implements OnInit {
   loadUnlockRequests(): void {
     forkJoin({
       unlockRequests: this.unlockRequestsApi.getAll(),
-      vehicles: this.vehiclesApi.getAll()
+      vehicles: this.vehicleService.loadVehicles()
     }).subscribe({
-      next: ({ unlockRequests, vehicles }) => {
+      next: ({ unlockRequests, vehicles }: { unlockRequests: UnlockRequestResponse[], vehicles: Vehicle[] }) => {
         this.unlockRequests = unlockRequests.map(request => {
-          const vehicle = vehicles.find(v => v.id === request.vehicleId);
+          const vehicle = vehicles.find((v: Vehicle) => v.id === request.vehicleId);
           return {
             id: request.id,
             vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown',

@@ -8,12 +8,13 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { Vehicle } from '../../../../garage/domain/model/vehicle.model';
-import { BookingsApiEndpoint } from '../../../infraestructure/bookings-api-endpoint';
-import { toDomainBooking } from '../../../infraestructure/booking-assembler';
+import { BookingsApiEndpoint } from '../../../infrastructure/bookings-api-endpoint';
+import { toDomainBooking, toCreateBookingDTO } from '../../../infrastructure/booking-assembler';
 import { ActiveBookingService } from '../../../application/active-booking.service';
 import { BookingStore } from '../../../application/booking.store';
 import { UnlockMethodSelectionModal } from '../unlock-method-selection-modal/unlock-method-selection-modal';
-import { UnlockRequestsApiEndpoint } from '../../../infraestructure/unlockRequests-api-endpoint';
+import { UnlockRequestsApiEndpoint } from '../../../infrastructure/unlockRequests-api-endpoint';
+import { CreateBookingRequest } from '../../../domain/model/booking.model';
 import { UnlockRequest } from '../../../domain/model/unlockRequest.entity';
 import { firstValueFrom } from 'rxjs';
 import { ManualUnlockModal } from '../../../../garage/presentation/views/manual-unlock-modal/manual-unlock-modal';
@@ -487,7 +488,9 @@ export class ScheduleUnlockComponent implements OnInit {
   }
 
   async scheduleUnlock() {
-    // Validar campos requeridos
+    // ============================================================
+    // 1. VALIDACIONES BÁSICAS
+    // ============================================================
     if (!this.selectedVehicle || !this.selectedDate || !this.unlockTime) {
       this.snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
         duration: 3000,
@@ -509,144 +512,87 @@ export class ScheduleUnlockComponent implements OnInit {
       return;
     }
 
-    // Combine date and time into startDate
+    // ============================================================
+    // 2. CÁLCULO DE FECHAS
+    // ============================================================
     const [hours, minutes] = this.unlockTime.split(':');
     const startDate = new Date(this.selectedDate);
     startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    // Calculate endDate based on duration
     const endDate = new Date(startDate.getTime() + this.duration * 60 * 60 * 1000);
 
-    // Verificar disponibilidad del vehículo
+    // ============================================================
+    // 3. VERIFICAR DISPONIBILIDAD
+    // ============================================================
     this.availabilityError = '';
     const availability = await this.checkVehicleAvailability(startDate, endDate);
 
     if (!availability.available) {
-      this.snackBar.open(availability.message || 'El vehículo no está disponible en el horario seleccionado', 'Cerrar', {
-        duration: 5000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top',
-        panelClass: ['error-snackbar']
-      });
+      this.snackBar.open(
+        availability.message || 'El vehículo no está disponible en el horario seleccionado',
+        'Cerrar',
+        {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        }
+      );
       this.availabilityError = availability.message || 'Vehículo no disponible';
       return;
     }
 
-    // Obtener usuario real
+    // ============================================================
+    // 4. CONSTRUIR CreateBookingRequest (CONTRATO LIMPIO)
+    // ============================================================
     const currentUser = this.authStore.currentUser();
     const sessionUser = this.authStore.session()?.user;
     const userId = currentUser?.id || sessionUser?.id || '1';
 
-    // Estado en minúsculas según backend
-    const status: 'pending' | 'confirmed' | 'completed' | 'cancelled' = this.isImmediate ? 'confirmed' : 'pending';
+    // Calcular costo total
+    const totalMinutes = this.duration * 60;
+    const calculatedCost = this.selectedVehicle.pricePerMinute * totalMinutes;
 
-    // Mapear ubicaciones válidas: si el vehículo trae un nombre de lugar,
-    // usar un ID seguro por defecto ('1'). Si ya es numérico, respetarlo.
-    const rawLoc = this.selectedVehicle.location;
-    const isNumericId = rawLoc && /^\d+$/.test(String(rawLoc));
-    const startLocId = isNumericId ? String(rawLoc) : '1';
-    const endLocId = startLocId;
+    // Convertir IDs a números (IMPORTANTE: el backend espera números)
+    const userIdNumber = parseInt(userId, 10);
+    const vehicleIdNumber = parseInt(this.selectedVehicle.id, 10);
+    const startLocationIdNumber = 1; // Ubicación por defecto (ajustar según tu lógica)
+    const endLocationIdNumber = 1;   // Ubicación por defecto
 
-    // 1. Función auxiliar para fechas (si no la pusiste antes)
-    const toLocalISOString = (date: Date): string => {
-        return date.toISOString().slice(0, -1);
-    };
-
-    // 2. Definimos bookingData como 'any' para evitar conflictos estrictos de TS
-    // y poder enviar nulls o omitir 'issues' sin que el compilador se queje.
-    const bookingData: any = {
-      userId: userId,
-      vehicleId: this.selectedVehicle.id,
-      startLocationId: '1', 
-      endLocationId: '1',
-      reservedAt: toLocalISOString(new Date()),
-      startDate: toLocalISOString(startDate),
-      endDate: toLocalISOString(endDate),
-      actualStartDate: this.isImmediate ? toLocalISOString(new Date()) : null,
-      actualEndDate: null,
-      status: status,
-      // Usamos parseFloat o null si no hay valor
-      totalCost: this.calculateTotal() ? parseFloat(this.calculateTotal()) : null,
-      discount: 0,
-      finalCost: this.calculateTotal() ? parseFloat(this.calculateTotal()) : null,
-      paymentMethod: 'card',
+    // Construir el request siguiendo el contrato EXACTO
+    const bookingRequest: CreateBookingRequest = {
+      userId: userIdNumber,
+      vehicleId: vehicleIdNumber,
+      startLocationId: startLocationIdNumber,
+      endLocationId: endLocationIdNumber,
+      reservedAt: new Date().toISOString(),
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      totalCost: calculatedCost,
+      finalCost: calculatedCost, // Sin descuento por ahora
+      paymentMethod: 'card',      // Ajustar según preferencia del usuario
       paymentStatus: 'pending',
-      distance: null,
-      duration: this.duration * 60,
-      averageSpeed: null,
-      rating: null
-      // issues: [] <--- NO LO INCLUIMOS. El backend fallará si lo enviamos.
+      duration: totalMinutes
     };
 
-    console.log('Enviando payload:', JSON.stringify(bookingData, null, 2));
+    console.log('✅ PAYLOAD LIMPIO enviando al backend:', JSON.stringify(bookingRequest, null, 2));
 
-    // 3. Usamos 'as any' en la llamada para saltar la validación de la interfaz BookingResponse
-    this.bookingsApi.create(bookingData as any).subscribe({
+    // ============================================================
+    // 5. CONVERTIR A DTO Y ENVIAR AL BACKEND
+    // ============================================================
+    const bookingDTO = toCreateBookingDTO(bookingRequest);
+
+    this.bookingsApi.create(bookingDTO).subscribe({
       next: async (response) => {
-        // ... (resto de tu código exitoso igual) ...
-        const booking = toDomainBooking(response);
-        this.activeBookingService.setActiveBooking(booking);
-        this.bookingStore.addBooking(booking);
+        console.log('✅ Booking creado exitosamente:', response);
         
-        const message = this.isImmediate
-          ? 'Reserva confirmada. ¡Disfruta tu viaje!'
-          : 'Reserva programada exitosamente';
-
-        this.snackBar.open(message, 'Cerrar', {
-          duration: 2000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['success-snackbar']
-        });
-
-        await this.openUnlockMethodSelection(booking);
-      },
-      error: (error) => {
-        console.error('Error creating booking:', error);
-        // ... (tu manejo de errores) ...
-        let errorMessage = 'Error al crear la reserva. Intenta de nuevo.';
-        if (error.status === 409) {
-          errorMessage = 'El vehículo ya está reservado en ese horario.';
-        } else if (error.status === 400) {
-          errorMessage = 'Datos inválidos. Revisa la consola para ver el payload.';
-        }
-        this.snackBar.open(errorMessage, 'Cerrar', {
-          duration: 4000,
-          panelClass: ['error-snackbar']
-        });
-        this.availabilityError = errorMessage;
-      }
-    });
-
-    // Para reservas confirmadas inmediatas, incluir costos y duración planificada
-    // Valores numéricos obligatorios según contrato del backend
-    const plannedDurationMinutes = this.duration * 60;
-    if (status === 'confirmed') {
-      bookingData.totalCost = parseFloat(this.calculateTotal());
-      bookingData.discount = 0;
-      bookingData.finalCost = parseFloat(this.calculateTotal());
-      bookingData.duration = plannedDurationMinutes;
-    } else {
-      // Para 'pending', usar nulls para costos y duración según contrato
-      bookingData.totalCost = null;
-      bookingData.discount = null;
-      bookingData.finalCost = null;
-      bookingData.duration = null;
-    }
-
-    bookingData.actualStartDate = this.isImmediate ? new Date().toISOString() : null;
-    bookingData.actualEndDate = null;
-
-    // Create booking via API
-    this.bookingsApi.create(bookingData).subscribe({
-      next: async (response) => {
         const booking = toDomainBooking(response);
 
-        // Save to active booking service and store
+        // Guardar en servicios
         this.activeBookingService.setActiveBooking(booking);
         this.bookingStore.addBooking(booking);
 
-        // Show success message
+        // Mensaje de éxito
         const message = this.isImmediate
           ? 'Reserva confirmada. ¡Disfruta tu viaje!'
           : 'Reserva programada exitosamente';
@@ -662,14 +608,17 @@ export class ScheduleUnlockComponent implements OnInit {
         await this.openUnlockMethodSelection(booking);
       },
       error: (error) => {
-        console.error('Error creating booking:', error, (error as any)?.error);
+        console.error('❌ Error creating booking:', error);
+        console.error('❌ Error details:', error?.error);
+        
         let errorMessage = 'Error al crear la reserva. Intenta de nuevo.';
 
-        // Mensajes de error más específicos
         if (error.status === 409) {
-          errorMessage = 'El vehículo ya está reservado en ese horario. Por favor, selecciona otro horario.';
+          errorMessage = 'El vehículo ya está reservado en ese horario.';
         } else if (error.status === 400) {
-          errorMessage = 'Los datos de la reserva no son válidos. Verifica la información.';
+          errorMessage = 'Datos inválidos. Revisa la consola para más detalles.';
+        } else if (error.status === 500) {
+          errorMessage = 'Error del servidor. Por favor contacta soporte.';
         }
 
         this.snackBar.open(errorMessage, 'Cerrar', {
@@ -678,6 +627,7 @@ export class ScheduleUnlockComponent implements OnInit {
           verticalPosition: 'top',
           panelClass: ['error-snackbar']
         });
+        
         this.availabilityError = errorMessage;
       }
     });

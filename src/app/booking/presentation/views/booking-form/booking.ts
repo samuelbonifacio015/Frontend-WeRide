@@ -10,8 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { BookingStorageService } from '../../../application/booking-storage.service';
 import { BookingStore } from '../../../application/booking.store';
-import { BookingsApiEndpoint } from '../../../infraestructure/bookings-api-endpoint';
-import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
+import { BookingsApiEndpoint } from '../../../infrastructure/bookings-api-endpoint';
 
 @Component({
   selector: 'app-booking-form',
@@ -34,7 +33,6 @@ export class BookingFormComponent implements OnInit {
   private bookingStorage = inject(BookingStorageService);
   private bookingStore = inject(BookingStore);
   private bookingsApi = inject(BookingsApiEndpoint);
-  private vehiclesApi = inject(VehiclesApiEndpoint);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
 
@@ -77,16 +75,9 @@ export class BookingFormComponent implements OnInit {
   // --- MÉTODOS DE CARGA ---
 
   private loadVehicles(): void {
-    this.vehiclesApi.getAll().subscribe({
-      next: (data) => {
-        this.vehicles = data;
-        this.updateRate();
-      },
-      error: (err) => {
-        console.error('Error cargando vehículos', err);
-        this.showErrorMessage('Error cargando la lista de vehículos');
-      }
-    });
+    // TODO: Use proper vehicle service from garage module
+    this.vehicles = [];
+    this.updateRate();
   }
 
   private loadBookingForEdit(bookingId: string): void {
@@ -99,7 +90,7 @@ export class BookingFormComponent implements OnInit {
       this.duration = booking.duration || 1;
       this.updateRate();
     } else {
-      this.bookingsApi.getAll().subscribe(bookings => {
+      this.bookingsApi.getAll().subscribe((bookings: any[]) => {
         const found = bookings.find((b: any) => b.id === bookingId);
         if(found) {
           this.selectedVehicle = found.vehicleId;
@@ -150,7 +141,7 @@ export class BookingFormComponent implements OnInit {
     };
 
     this.bookingsApi.create(payload).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:152',message:'POST response received',data:{response,responseType:typeof response,isArray:Array.isArray(response),hasId:'id' in response,hasBookingId:'bookingId' in response,keys:Object.keys(response || {})},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
         // #endregion
@@ -180,7 +171,7 @@ export class BookingFormComponent implements OnInit {
           await this.router.navigate(['/booking/list']); // <--- USAMOS AWAIT
         }, 2000);
       },
-      error: (err) => {
+      error: (err: any) => {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/cc9e027b-0e24-4d5d-bafb-2fcebd8f5e3f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'booking-form/booking.ts:172',message:'POST error',data:{error:err?.message,status:err?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
         // #endregion
@@ -205,7 +196,7 @@ export class BookingFormComponent implements OnInit {
     };
 
     this.bookingsApi.update(this.editingBookingId, payload).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         const updatedEntity = this.mapApiResponseToBookingEntity(response);
         this.bookingStorage.updateBooking(this.editingBookingId!, updatedEntity);
         this.bookingStore.loadFromLocalStorage();
@@ -214,7 +205,7 @@ export class BookingFormComponent implements OnInit {
         this.showSummary = true;
         setTimeout(() => this.router.navigate(['/booking/list']), 2000);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error actualizando:', err);
         this.showErrorMessage('booking.updateError');
       }

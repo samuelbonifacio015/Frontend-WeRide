@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Booking } from '../domain/model/booking.entity';
-import { BookingsApiEndpoint } from '../infraestructure/bookings-api-endpoint';
-import { toDomainBooking } from '../infraestructure/booking-assembler';
+import { BookingsApiEndpoint } from '../infrastructure/bookings-api-endpoint';
+import { BookingResponse } from '../infrastructure/bookings-response';
+import { toDomainBooking } from '../infrastructure/booking-assembler';
 import { firstValueFrom } from 'rxjs';
 
 const ACTIVE_BOOKING_KEY = 'active_booking';
@@ -17,13 +18,13 @@ export class ActiveBookingService {
    */
   async checkAndStoreActiveBooking(userId: string): Promise<Booking | null> {
     try {
-      const bookings = await firstValueFrom(this.bookingsApi.getByUserId(userId));
+      const bookings: BookingResponse[] = await firstValueFrom(this.bookingsApi.getByUserId(userId));
       
       // Filter for active bookings (pending or confirmed status)
       const activeBookings = bookings
-        .filter(b => b.status === 'pending' || b.status === 'confirmed')
-        .map(b => toDomainBooking(b))
-        .sort((a, b) => b.reservedAt.getTime() - a.reservedAt.getTime());
+        .filter((b: BookingResponse) => b.status === 'pending' || b.status === 'confirmed')
+        .map((b: BookingResponse) => toDomainBooking(b))
+        .sort((a: Booking, b: Booking) => b.reservedAt.getTime() - a.reservedAt.getTime());
 
       if (activeBookings.length > 0) {
         const mostRecent = activeBookings[0];

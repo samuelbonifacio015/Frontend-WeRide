@@ -8,7 +8,7 @@ export const environment = {
     users: '/users',
     vehicles: '/vehicles',
     plans: '/plans',
-    locations: '/location',
+    locations: '/locations', // Fixed: was '/location' (singular)
     bookings: '/bookings',
     notifications: '/notifications',
     favorites: '/favorites',

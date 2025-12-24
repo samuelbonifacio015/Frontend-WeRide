@@ -2,8 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { Booking, BookingActivationStatus } from '../domain/model/booking.entity';
 import { BookingStorageService } from './booking-storage.service';
-import { BookingsApiEndpoint } from '../infraestructure/bookings-api-endpoint';
-import { toDomainBooking } from '../infraestructure/booking-assembler';
+import { BookingsApiEndpoint } from '../infrastructure/bookings-api-endpoint';
+import { BookingResponse } from '../infrastructure/bookings-response';
+import { toDomainBooking } from '../infrastructure/booking-assembler';
 
 @Injectable({ providedIn: 'root' })
 export class BookingStore {
@@ -89,7 +90,7 @@ export class BookingStore {
   }
 
   async activateBooking(bookingId: string): Promise<void> {
-    const bookingResponse = await firstValueFrom(
+    const bookingResponse: BookingResponse = await firstValueFrom(
       this.bookingsApi.getById(bookingId)
     );
 
@@ -99,9 +100,8 @@ export class BookingStore {
     activatedBooking.activatedAt = new Date();
     activatedBooking.status = 'active';
 
-    await firstValueFrom(
+    await firstValueFrom<BookingResponse>(
       this.bookingsApi.update(bookingId, {
-        ...bookingResponse,
         status: 'active',
         actualStartDate: new Date().toISOString()
       })
@@ -173,7 +173,7 @@ export class BookingStore {
   }
 
   async getBookingByIdAsync(bookingId: string): Promise<Booking> {
-    const response = await firstValueFrom(this.bookingsApi.getById(bookingId));
+    const response: BookingResponse = await firstValueFrom(this.bookingsApi.getById(bookingId));
     return toDomainBooking(response);
   }
 }

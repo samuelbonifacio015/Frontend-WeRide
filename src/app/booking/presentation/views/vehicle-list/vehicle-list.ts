@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
-import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
-import { VehicleResponse } from '../../../infraestructure/vehicle-response';
+import { VehicleService } from '../../../../core/services/vehicle.service';
+import { Vehicle } from '../../../../core/services/api.service';
 
 @Component({
   selector: 'app-vehicle-list',
@@ -15,9 +15,9 @@ import { VehicleResponse } from '../../../infraestructure/vehicle-response';
   styleUrl: './vehicle-list.css'
 })
 export class VehicleList implements OnInit {
-  private vehiclesApi = inject(VehiclesApiEndpoint);
+  private vehicleService = inject(VehicleService);
 
-  vehicles: VehicleResponse[] = [];
+  vehicles: Vehicle[] = [];
   isLoading = true;
 
   ngOnInit(): void {
@@ -25,8 +25,8 @@ export class VehicleList implements OnInit {
   }
 
   loadVehicles(): void {
-    this.vehiclesApi.getAll().subscribe({
-      next: (vehicles) => {
+    this.vehicleService.loadVehicles().subscribe({
+      next: (vehicles: Vehicle[]) => {
         this.vehicles = vehicles;
         this.isLoading = false;
       },
