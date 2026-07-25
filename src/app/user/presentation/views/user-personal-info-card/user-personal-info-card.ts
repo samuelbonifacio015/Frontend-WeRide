@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatIcon } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { UserStore } from '../../../application/user.store';
+import { CurrentUserViewService } from '../../../../profile/application/current-user-view.service';
 import { UserSettingsStateService } from '../../../application/user-settings-state.service';
 import { User } from '../../../domain/model/user.entity';
 
@@ -16,10 +17,11 @@ import { User } from '../../../domain/model/user.entity';
 })
 export class UserPersonalInfoCard implements OnInit {
   private readonly userStore = inject(UserStore);
+  private readonly currentUserView = inject(CurrentUserViewService);
   private readonly stateService = inject(UserSettingsStateService);
   private readonly fb = inject(FormBuilder);
 
-  user$ = this.userStore.getGuestUser$();
+  user$ = this.currentUserView.getCurrentUser$();
   currentUser: User | null = null;
   
   personalInfoForm!: FormGroup;
@@ -69,6 +71,8 @@ export class UserPersonalInfoCard implements OnInit {
     }
   }
 
+  // TODO backend: falta PUT /profiles/{id} — este guardado sigue siendo
+  // mock/local hasta que el backend soporte editar el perfil real.
   savePersonalInfo(): void {
     this.errorMessage = '';
     this.successMessage = '';
