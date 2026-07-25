@@ -39,7 +39,7 @@ export class EmailLoginComponent {
       if (!this.actionAttempted() || isLoading) return;
 
       if (session && session.isValid && !error) {
-        if (this.isRegisterMode()) {
+        if (this.justRegistered()) {
           this.profileStore.createProfile({
             firstName: this.firstName(),
             lastName: this.lastName(),

@@ -105,6 +105,13 @@ describe('EmailLoginComponent', () => {
 
     component.continue();
 
+    authStoreSpy.currentUser.set(new User(
+      '1', 'Nico Ramos', 'nico@weride.com', '', 'basic', true, '', '', '', '', 'verified', '', {
+        language: 'es', notifications: true, theme: 'light'
+      }, { totalTrips: 0, totalDistance: 0, totalSpent: 0, averageRating: 0 }
+    ));
+    fixture.detectChanges();
+
     const exp = new Date();
     exp.setHours(exp.getHours() + 1);
     authStoreSpy.session.set({ isValid: true, expiresAt: exp });
