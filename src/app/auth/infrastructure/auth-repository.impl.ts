@@ -17,6 +17,11 @@ interface SignInResponse {
   token: string;
 }
 
+interface SignUpResponse {
+  id: number;
+  username: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -105,6 +110,23 @@ export class AuthRepositoryImpl extends AuthRepository {
   }
 
   register(data: RegistrationData): Observable<User> {
+    if (!data.password) {
+      return this.registerMock(data);
+    }
+
+    const username = data.email!;
+    const authUrl = `${environment.apiUrl}${environment.endpoints.authentication}/sign-up`;
+
+    return this.http.post<SignUpResponse>(authUrl, {
+      username,
+      password: data.password
+    }).pipe(
+      map(({ id, username: createdUsername }) => this.toMinimalUser(id, createdUsername)),
+      catchError((err: HttpErrorResponse) => throwError(() => new Error(this.mapAuthError(err))))
+    );
+  }
+
+  private registerMock(data: RegistrationData): Observable<User> {
     const newUserData: HardcodedUserData = {
       id: `user-${Date.now()}`,
       name: data.fullName,

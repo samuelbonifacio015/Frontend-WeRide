@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthRepositoryImpl } from './auth-repository.impl';
 import { AuthCredentials } from '../domain/model/auth-credentials.entity';
+import { RegistrationData } from '../domain/model/registration-data.entity';
 import { AUTH_SESSION_KEY } from './token-storage';
 import { environment } from '../../../environments/environment';
 
@@ -68,5 +69,52 @@ describe('AuthRepositoryImpl - login real', () => {
     req.flush('credenciales inválidas', { status: 401, statusText: 'Unauthorized' });
 
     expect(receivedError?.message).toBe('Usuario o contraseña incorrectos');
+  });
+});
+
+describe('AuthRepositoryImpl - registro real', () => {
+  let repository: AuthRepositoryImpl;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    TestBed.configureTestingModule({
+      providers: [
+        AuthRepositoryImpl,
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
+    });
+    repository = TestBed.inject(AuthRepositoryImpl);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+    localStorage.removeItem(AUTH_SESSION_KEY);
+  });
+
+  it('con password presente, llama a POST /authentication/sign-up', () => {
+    const data = new RegistrationData('Nico', 'Ramos', '', 'nico', 'secret123');
+
+    repository.register(data).subscribe(user => {
+      expect(user.id).toBe('9');
+      expect(user.name).toBe('nico');
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}${environment.endpoints.authentication}/sign-up`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ username: 'nico', password: 'secret123' });
+    req.flush({ id: 9, username: 'nico' });
+  });
+
+  it('sin password (flujo de teléfono), NO llama al backend', () => {
+    const data = new RegistrationData('Nico', 'Ramos', '51999999999');
+
+    repository.register(data).subscribe(user => {
+      expect(user.phone).toBe('51999999999');
+    });
+
+    httpMock.expectNone(`${environment.apiUrl}${environment.endpoints.authentication}/sign-up`);
   });
 });
