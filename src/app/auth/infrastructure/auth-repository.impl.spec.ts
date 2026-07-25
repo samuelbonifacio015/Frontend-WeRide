@@ -118,3 +118,47 @@ describe('AuthRepositoryImpl - registro real', () => {
     httpMock.expectNone(`${environment.apiUrl}${environment.endpoints.authentication}/sign-up`);
   });
 });
+
+describe('AuthRepositoryImpl - loginWithGoogle', () => {
+  let repository: AuthRepositoryImpl;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    TestBed.configureTestingModule({
+      providers: [
+        AuthRepositoryImpl,
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
+    });
+    repository = TestBed.inject(AuthRepositoryImpl);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+    localStorage.removeItem(AUTH_SESSION_KEY);
+  });
+
+  it('resuelve la sesión para un usuario mock de Google, sin llamar a /authentication/sign-in', () => {
+    repository.loginWithGoogle({ email: 'usuario@gmail.com' }).subscribe(session => {
+      expect(session.user.email).toBe('usuario@gmail.com');
+      expect(session.user.name).toBe('Usuario Demo');
+      expect(session.isValid).toBeTrue();
+    });
+
+    httpMock.expectNone(`${environment.apiUrl}${environment.endpoints.authentication}/sign-in`);
+  });
+
+  it('falla con "Usuario no encontrado" si el email no existe en hardcoded-users', () => {
+    let receivedError: Error | undefined;
+
+    repository.loginWithGoogle({ email: 'no-existe@gmail.com' }).subscribe({
+      error: (err) => (receivedError = err)
+    });
+
+    expect(receivedError?.message).toBe('Usuario no encontrado');
+    httpMock.expectNone(`${environment.apiUrl}${environment.endpoints.authentication}/sign-in`);
+  });
+});

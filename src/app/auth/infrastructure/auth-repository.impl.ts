@@ -9,7 +9,7 @@ import { AuthCredentials } from '../domain/model/auth-credentials.entity';
 import { PhoneCredentials } from '../domain/model/phone-credentials.entity';
 import { AuthSession } from '../domain/model/auth-session.entity';
 import { RegistrationData } from '../domain/model/registration-data.entity';
-import { getUserByPhone, toUserEntity, addUser, HardcodedUserData } from './hardcoded-users';
+import { getUserByEmail, getUserByPhone, toUserEntity, addUser, HardcodedUserData } from './hardcoded-users';
 import { AUTH_SESSION_KEY, decodeJwtExpiry } from './token-storage';
 
 interface SignInResponse {
@@ -73,8 +73,21 @@ export class AuthRepositoryImpl extends AuthRepository {
     return of(session);
   }
 
-  loginWithGoogle(): Observable<AuthSession> {
-    return throwError(() => new Error('Google login no implementado'));
+  loginWithGoogle(account: { email: string }): Observable<AuthSession> {
+    const userData = getUserByEmail(account.email);
+
+    if (!userData) {
+      return throwError(() => new Error('Usuario no encontrado'));
+    }
+
+    if (!userData.isActive) {
+      return throwError(() => new Error('Usuario inactivo'));
+    }
+
+    const userEntity = toUserEntity(userData);
+    const session = this.createSession(userEntity, false);
+    this.saveSession(session);
+    return of(session);
   }
 
   loginAsGuest(): Observable<AuthSession> {
