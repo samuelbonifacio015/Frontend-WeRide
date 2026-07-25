@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { VehicleRepositoryImpl } from './vehicle.repository.impl';
 import { VehicleApiService, VehicleApiResponse } from '../http/vehicle-api.service';
 import { Vehicle } from '../../domain/model/vehicle.model';
@@ -58,5 +59,19 @@ describe('VehicleRepositoryImpl - CRUD real', () => {
     apiSpy.createVehicle.and.returnValue(Promise.reject(new Error('network down')));
 
     await expectAsync(repository.create(vehicleInput)).toBeRejectedWithError('No se pudo crear el vehículo');
+  });
+
+  it('create() mapea un 404 a "Vehículo no encontrado"', async () => {
+    const httpError = new HttpErrorResponse({ status: 404, error: null });
+    apiSpy.createVehicle.and.returnValue(Promise.reject(httpError));
+
+    await expectAsync(repository.create(vehicleInput)).toBeRejectedWithError('Vehículo no encontrado');
+  });
+
+  it('update() mapea un 401 a "Sesión inválida, iniciá sesión de nuevo"', async () => {
+    const httpError = new HttpErrorResponse({ status: 401, error: null });
+    apiSpy.updateVehicle.and.returnValue(Promise.reject(httpError));
+
+    await expectAsync(repository.update('10', vehicleInput)).toBeRejectedWithError('Sesión inválida, iniciá sesión de nuevo');
   });
 });

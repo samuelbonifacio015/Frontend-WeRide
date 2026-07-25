@@ -1,6 +1,7 @@
 import { Vehicle } from '../../domain/model/vehicle.model';
 import { VehicleRepository } from '../../application/repositories/vehicle.repository';
 import { Injectable } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { VehicleApiService } from '../http/vehicle-api.service';
 import { VehicleMapper } from '../mappers/vehicle.mapper';
 
@@ -27,7 +28,7 @@ export class VehicleRepositoryImpl implements VehicleRepository {
       return VehicleMapper.toDomain(apiResponse);
     } catch (error) {
       console.error('Error creating vehicle:', error);
-      throw new Error('No se pudo crear el vehículo');
+      throw new Error(this.mapError(error, 'No se pudo crear el vehículo'));
     }
   }
 
@@ -38,7 +39,7 @@ export class VehicleRepositoryImpl implements VehicleRepository {
       return VehicleMapper.toDomain(apiResponse);
     } catch (error) {
       console.error('Error updating vehicle:', error);
-      throw new Error('No se pudo actualizar el vehículo');
+      throw new Error(this.mapError(error, 'No se pudo actualizar el vehículo'));
     }
   }
 
@@ -47,7 +48,17 @@ export class VehicleRepositoryImpl implements VehicleRepository {
       await this.vehicleApiService.deleteVehicle(id);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
-      throw new Error('No se pudo eliminar el vehículo');
+      throw new Error(this.mapError(error, 'No se pudo eliminar el vehículo'));
     }
+  }
+
+  private mapError(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse)) return fallback;
+    const err = error;
+    if (err.status === 401) return 'Sesión inválida, iniciá sesión de nuevo';
+    if (err.status === 404) return 'Vehículo no encontrado';
+    if (err.status === 409) return typeof err.error === 'string' && err.error ? err.error : 'El vehículo ya existe';
+    if (typeof err.error === 'string' && err.error) return err.error;
+    return 'Error de conexión con el servidor';
   }
 }
