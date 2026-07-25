@@ -74,7 +74,7 @@ export const AuthStore = signalStore(
           tap(() => patchState(store, { isLoading: true, error: null })),
           switchMap((googleAccount) =>
             loginWithEmailUseCase.execute({
-              email: googleAccount.email,
+              username: googleAccount.email,
               password: '1234'
             }).pipe(
               tap((session) => {
