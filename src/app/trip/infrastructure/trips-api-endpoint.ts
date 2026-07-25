@@ -19,8 +19,10 @@ export class TripsApiEndpoint {
     return this.http.get<Trip>(`${this.baseUrl}/${id}`);
   }
 
-  getByUserId(userId: string): Observable<Trip[]> {
-    return this.http.get<Trip[]>(`${this.baseUrl}?userId=${userId}`);
+  // El backend real ya devuelve solo los trips del usuario autenticado
+  // (scoping vía JWT) — no acepta filtro por userId en la URL.
+  getMine(): Observable<Trip[]> {
+    return this.http.get<Trip[]>(this.baseUrl);
   }
 
   create(trip: Partial<Trip>): Observable<Trip> {

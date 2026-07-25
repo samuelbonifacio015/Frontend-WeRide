@@ -28,9 +28,8 @@ export class UserHistoryCard implements OnInit {
   ngOnInit(): void {
     this.user$.subscribe(user => {
       if (user?.id) {
-        const userId = user.id.toString();
-        this.trips$ = this.tripsApi.getByUserId(userId);
-        this.bookings$ = this.bookingsApi.getByUserId(userId);
+        this.trips$ = this.tripsApi.getMine();
+        this.bookings$ = this.bookingsApi.getByUserId(user.id.toString());
       } else {
         this.trips$ = new Observable(observer => observer.next([]));
         this.bookings$ = new Observable(observer => observer.next([]));
