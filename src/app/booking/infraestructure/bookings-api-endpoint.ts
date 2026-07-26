@@ -37,11 +37,11 @@ export class BookingsApiEndpoint {
 
   // Obtener reservas por userId
   getByUserId(userId: string): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}?userId=${userId}`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/user/${userId}`);
   }
 
   // Obtener reservas por vehicleId
   getByVehicleId(vehicleId: string): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}?vehicleId=${vehicleId}`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/vehicle/${vehicleId}`);
   }
 }
