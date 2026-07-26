@@ -26,8 +26,8 @@ export class BookingsApiEndpoint {
   }
 
   // PENDIENTE backend: no existe PUT/PATCH /bookings/{id} en el backend
-  // real (solo se puede borrar un draft, no editar una reserva
-  // confirmada). Callers: booking.store.ts, booking-list.ts (cancelar),
+  // real — no hay ningún endpoint de edición de reservas confirmadas en
+  // el backend real. Callers: booking.store.ts, booking-list.ts (cancelar),
   // booking-form.ts (editar), schedule-unlock.ts (simular desbloqueo) —
   // hoy fallarán con 404/405 contra el backend real.
   update(id: string, booking: Partial<BookingResponse>): Observable<BookingResponse> {

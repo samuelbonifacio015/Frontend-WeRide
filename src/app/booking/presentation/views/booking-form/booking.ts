@@ -131,7 +131,9 @@ export class BookingFormComponent implements OnInit {
     // selector de ubicaciones reales. El backend real espera Long, así
     // que crear una reserva contra el backend real fallará (400) hasta
     // que se construya un selector — eso es un cambio de UX, fuera de
-    // alcance de esta fase.
+    // alcance de esta fase. El userId hardcodeado ('1') es inofensivo
+    // contra el backend real (lo ignora y usa el JWT), pero sigue siendo
+    // fijo contra el mock actual.
     // PAYLOAD COMPLETO (NECESARIO PARA PASAR LA VALIDACIÓN TS DEL FRONTEND)
     const payload: any = {
       userId: '1',

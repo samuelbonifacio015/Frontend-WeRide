@@ -11,10 +11,6 @@ export class TripsApiEndpoint {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}${environment.endpoints.trips}`;
 
-  getAll(): Observable<Trip[]> {
-    return this.http.get<Trip[]>(this.baseUrl);
-  }
-
   // PENDIENTE backend: no existe GET /trips/{id} en el backend real. Sin
   // callers hoy — se deja documentado en vez de eliminarlo.
   getById(id: string): Observable<Trip> {
