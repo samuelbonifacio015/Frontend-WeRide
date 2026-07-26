@@ -10,9 +10,11 @@ export class NotificationsApiEndpoint {
 
   constructor(private http: HttpClient) {}
 
-  // Obtener todas las notificaciones
-  getAll(): Observable<NotificationResponse[]> {
-    return this.http.get<NotificationResponse[]>(this.baseUrl);
+  // Obtener todas las notificaciones del usuario autenticado.
+  // El backend real exige el query param (400 si falta) aunque ignora su
+  // valor — el filtrado real sale del JWT.
+  getAll(userId: string): Observable<NotificationResponse[]> {
+    return this.http.get<NotificationResponse[]>(`${this.baseUrl}?userId=${userId}`);
   }
 
   // Obtener notificaciones por ID de usuario
@@ -40,11 +42,10 @@ export class NotificationsApiEndpoint {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  // Marcar una notificación como leída
-  markAsRead(id: string): Observable<NotificationResponse> {
-    return this.http.patch<NotificationResponse>(`${this.baseUrl}/${id}`, {
-      isRead: true,
-      readAt: new Date().toISOString()
-    });
+  // Marcar una notificación como leída.
+  // El backend real es PATCH /notifications/{id}/read, sin body, y
+  // devuelve un string plano (no un NotificationResource).
+  markAsRead(id: string): Observable<string> {
+    return this.http.patch<string>(`${this.baseUrl}/${id}/read`, null);
   }
 }
