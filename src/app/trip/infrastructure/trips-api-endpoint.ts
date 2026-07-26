@@ -15,6 +15,8 @@ export class TripsApiEndpoint {
     return this.http.get<Trip[]>(this.baseUrl);
   }
 
+  // PENDIENTE backend: no existe GET /trips/{id} en el backend real. Sin
+  // callers hoy — se deja documentado en vez de eliminarlo.
   getById(id: string): Observable<Trip> {
     return this.http.get<Trip>(`${this.baseUrl}/${id}`);
   }
@@ -29,6 +31,8 @@ export class TripsApiEndpoint {
     return this.http.post<Trip>(this.baseUrl, trip);
   }
 
+  // PENDIENTE backend: no existe PATCH/PUT /trips/{id} en el backend real.
+  // Sin callers hoy — se deja documentado en vez de eliminarlo.
   update(id: string, trip: Partial<Trip>): Observable<Trip> {
     return this.http.patch<Trip>(`${this.baseUrl}/${id}`, trip);
   }
