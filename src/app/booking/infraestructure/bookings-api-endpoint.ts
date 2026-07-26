@@ -25,12 +25,19 @@ export class BookingsApiEndpoint {
     return this.http.get<BookingResponse>(`${this.baseUrl}/${id}`);
   }
 
-  // Actualizar una reserva
+  // PENDIENTE backend: no existe PUT/PATCH /bookings/{id} en el backend
+  // real (solo se puede borrar un draft, no editar una reserva
+  // confirmada). Callers: booking.store.ts, booking-list.ts (cancelar),
+  // booking-form.ts (editar), schedule-unlock.ts (simular desbloqueo) —
+  // hoy fallarán con 404/405 contra el backend real.
   update(id: string, booking: Partial<BookingResponse>): Observable<BookingResponse> {
     return this.http.patch<BookingResponse>(`${this.baseUrl}/${id}`, booking);
   }
 
-  // Eliminar una reserva
+  // PENDIENTE backend: no existe DELETE /bookings/{id} en el backend real
+  // (solo DELETE /bookings/draft/{draftId} para borradores). Caller:
+  // booking-list.ts (eliminar reserva) — hoy fallará con 404/405 contra
+  // el backend real.
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
