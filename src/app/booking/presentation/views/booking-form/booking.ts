@@ -126,6 +126,12 @@ export class BookingFormComponent implements OnInit {
     const startDateTime = this.combineDateTime(this.selectedDate, this.unlockTime);
     const calculatedCost = this.calculateCost();
 
+    // PENDIENTE backend/UX: startLocationId/endLocationId están
+    // hardcodeados ('loc-A'/'loc-B') porque este formulario no tiene un
+    // selector de ubicaciones reales. El backend real espera Long, así
+    // que crear una reserva contra el backend real fallará (400) hasta
+    // que se construya un selector — eso es un cambio de UX, fuera de
+    // alcance de esta fase.
     // PAYLOAD COMPLETO (NECESARIO PARA PASAR LA VALIDACIÓN TS DEL FRONTEND)
     const payload: any = {
       userId: '1',
