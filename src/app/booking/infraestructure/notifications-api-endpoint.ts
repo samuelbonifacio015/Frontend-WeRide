@@ -17,7 +17,9 @@ export class NotificationsApiEndpoint {
     return this.http.get<NotificationResponse[]>(`${this.baseUrl}?userId=${userId}`);
   }
 
-  // Obtener notificaciones por ID de usuario
+  // PENDIENTE backend: este filtro por query param no tiene efecto real
+  // — GET /notifications ya filtra por JWT sin importar el valor de
+  // userId, igual que getAll(). Sin callers hoy.
   getByUserId(userId: string): Observable<NotificationResponse[]> {
     return this.http.get<NotificationResponse[]>(`${this.baseUrl}?userId=${userId}`);
   }
@@ -27,17 +29,22 @@ export class NotificationsApiEndpoint {
     return this.http.post<NotificationResponse>(this.baseUrl, notification);
   }
 
-  // Obtener una notificación por ID
+  // GET /notifications/{id} sí existe en el backend real (devuelve 404 si
+  // no pertenece al usuario autenticado) — sin callers hoy, pero no hay
+  // gap que documentar.
   getById(id: string): Observable<NotificationResponse> {
     return this.http.get<NotificationResponse>(`${this.baseUrl}/${id}`);
   }
 
-  // Actualizar una notificación
+  // PENDIENTE backend: no existe PUT/PATCH /notifications/{id} genérico
+  // en el backend real (fuera de /read, ver markAsRead). Sin callers hoy.
   update(id: string, notification: Partial<NotificationResponse>): Observable<NotificationResponse> {
     return this.http.patch<NotificationResponse>(`${this.baseUrl}/${id}`, notification);
   }
 
-  // Eliminar una notificación
+  // PENDIENTE backend: no existe DELETE /notifications/{id} en el
+  // backend real. Caller: notification-list.ts (eliminar notificación) —
+  // hoy fallará con 404/405 contra el backend real.
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
