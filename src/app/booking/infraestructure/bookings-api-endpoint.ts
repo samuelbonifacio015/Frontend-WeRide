@@ -25,23 +25,30 @@ export class BookingsApiEndpoint {
     return this.http.get<BookingResponse>(`${this.baseUrl}/${id}`);
   }
 
-  // Actualizar una reserva
+  // PENDIENTE backend: no existe PUT/PATCH /bookings/{id} en el backend
+  // real — no hay ningún endpoint de edición de reservas confirmadas en
+  // el backend real. Callers: booking.store.ts, booking-list.ts (cancelar),
+  // booking-form.ts (editar), schedule-unlock.ts (simular desbloqueo) —
+  // hoy fallarán con 404/405 contra el backend real.
   update(id: string, booking: Partial<BookingResponse>): Observable<BookingResponse> {
     return this.http.patch<BookingResponse>(`${this.baseUrl}/${id}`, booking);
   }
 
-  // Eliminar una reserva
+  // PENDIENTE backend: no existe DELETE /bookings/{id} en el backend real
+  // (solo DELETE /bookings/draft/{draftId} para borradores). Caller:
+  // booking-list.ts (eliminar reserva) — hoy fallará con 404/405 contra
+  // el backend real.
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   // Obtener reservas por userId
   getByUserId(userId: string): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}?userId=${userId}`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/user/${userId}`);
   }
 
   // Obtener reservas por vehicleId
   getByVehicleId(vehicleId: string): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.baseUrl}?vehicleId=${vehicleId}`);
+    return this.http.get<BookingResponse[]>(`${this.baseUrl}/vehicle/${vehicleId}`);
   }
 }

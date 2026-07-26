@@ -1,10 +1,10 @@
-export class RegistrationData {
+export class Profile {
   constructor(
+    public id: number,
+    public userId: number,
     public firstName: string,
     public lastName: string,
-    public phone: string,
-    public email?: string,
-    public password?: string
+    public email: string
   ) {}
 
   get fullName(): string {

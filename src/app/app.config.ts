@@ -1,13 +1,15 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './auth/infrastructure/auth.interceptor';
 import { provideMapboxGL } from 'ngx-mapbox-gl';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { routes } from './app.routes';
 import { AUTH_PROVIDERS } from './auth/auth.providers';
+import { PROFILE_PROVIDERS } from './profile/profile.providers';
 
 export class CustomTranslateLoader implements TranslateLoader {
   constructor(private http: HttpClient, private prefix: string = './assets/i18n/', private suffix: string = '.json') {}
@@ -27,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimations(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideMapboxGL({
       accessToken: 'pk.eyJ1IjoiamhpbXlwb29sIiwiYSI6ImNtZGY4cjVoMDBheHcyaXEzaDV5a2g4eGIifQ.QYmwDCEn26DEW-8RbIG2jg'
     }),
@@ -39,6 +41,7 @@ export const appConfig: ApplicationConfig = {
         deps: [HttpClient]
       }
     }).providers!,
-    ...AUTH_PROVIDERS
+    ...AUTH_PROVIDERS,
+    ...PROFILE_PROVIDERS
   ]
 };

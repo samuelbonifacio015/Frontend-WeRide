@@ -4,6 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { BookingDraft } from '../domain/model/booking-draft.entity';
 import { environment } from '../../../environments/environment';
 
+// PENDIENTE backend: este servicio guarda preferencias de reserva
+// (recordatorio SMS/email, fecha, duración) contra un endpoint inventado
+// (/bookingDrafts) que no existe en el backend real. El endpoint real
+// (POST /api/v1/bookings/draft) espera casi una reserva completa
+// (vehicleId, ubicaciones, fechas, costos, pago) — migrar este flujo
+// implica rediseñar el formulario de reserva, no solo cambiar la URL.
+// Se deja documentado en modo mock hasta que se aborde ese rediseño.
 @Injectable({ providedIn: 'root' })
 export class DraftBookingService {
   private http = inject(HttpClient);
