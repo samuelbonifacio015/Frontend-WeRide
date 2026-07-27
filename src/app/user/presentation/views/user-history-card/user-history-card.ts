@@ -33,7 +33,7 @@ export class UserHistoryCard implements OnInit {
     this.user$.subscribe(user => {
       if (user?.id) {
         this.trips$ = this.tripsApi.getMine();
-        this.bookings$ = this.bookingsApi.getByUserId(user.id.toString());
+        this.bookings$ = this.bookingsApi.getCompletedByUser(user.id.toString());
         this.travelHistory$ = this.travelHistoryApi.getByUserId(user.id.toString());
       } else {
         this.trips$ = new Observable(observer => observer.next([]));
