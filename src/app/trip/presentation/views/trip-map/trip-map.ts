@@ -21,6 +21,7 @@ import { TripInitializerService } from '../../../application/trip-initializer.se
 import { TravelHistoryApiEndpoint } from '../../../infrastructure/travel-history-api-endpoint';
 import { CurrentUserViewService } from '../../../../profile/application/current-user-view.service';
 import { firstValueFrom } from 'rxjs';
+import { TripsApiEndpoint } from '../../../infrastructure/trips-api-endpoint';
 
 @Component({
   selector: 'app-trip-map',
@@ -42,6 +43,7 @@ export class TripMap implements OnInit, OnDestroy {
   private tripInitializer = inject(TripInitializerService);
   private travelHistoryApi = inject(TravelHistoryApiEndpoint);
   private currentUserView = inject(CurrentUserViewService);
+  private tripsApi = inject(TripsApiEndpoint);
 
   userLocation = signal<[number, number] | null>(null);
   markers: Array<{lng: number, lat: number}> = [];
@@ -361,10 +363,8 @@ export class TripMap implements OnInit, OnDestroy {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
 
-  endTrip() {
-    const currentTrip = this.tripStore.currentTrip();
-
-    this.saveTravelHistoryEntry();
+  async endTrip() {
+    await Promise.all([this.saveTrip(), this.saveTravelHistoryEntry()]);
 
     // Open rate trip modal after ending trip
     this.openRateTripModal();
@@ -375,6 +375,45 @@ export class TripMap implements OnInit, OnDestroy {
     this.remainingTime.set('00:00:00');
     this.currentBattery.set(0);
     this.estimatedDistance.set(0);
+  }
+
+  private async saveTrip(): Promise<void> {
+    const bookingId = this.tripStore.activeBookingId() || this.activeBookingService.getActiveBooking()?.bookingId;
+    const vehicle = this.tripStore.currentVehicle();
+    const start = this.tripStartTime();
+    const location = this.tripStore.currentLocation();
+    const destination = this.destinationLocation();
+    if (!bookingId || !vehicle || !start || !location) return;
+
+    try {
+      const end = new Date();
+      const elapsedSeconds = Math.max(0, Math.floor((end.getTime() - start.getTime()) / 1000));
+      const trip = await firstValueFrom(this.tripsApi.create({
+        bookingId: Number(bookingId),
+        vehicleId: Number(vehicle.id),
+        startLocationId: Number(location.id),
+        endLocationId: destination ? Number(destination.id) : null,
+        route: `${location.name}${destination ? ` -> ${destination.name}` : ''}`,
+        routeCoordinates: [location.coordinates, ...(destination ? [destination.coordinates] : [])],
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        duration: Math.max(1, Math.round(elapsedSeconds / 60)),
+        distance: this.estimatedDistance(),
+        averageSpeed: 0,
+        maxSpeed: 0,
+        totalCost: 0,
+        carbonSaved: 0,
+        caloriesBurned: 0,
+        weather: '',
+        temperature: 0,
+        status: 'completed',
+        incidentReports: [],
+        photos: []
+      }));
+      this.tripStore.setCurrentTrip(trip);
+    } catch (error) {
+      console.error('Error registrando el viaje:', error);
+    }
   }
 
   // No bloquea el flujo de fin de viaje si falla — el rating y el reset
