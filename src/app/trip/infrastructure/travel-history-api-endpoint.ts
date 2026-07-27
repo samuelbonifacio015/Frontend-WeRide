@@ -19,4 +19,8 @@ export class TravelHistoryApiEndpoint {
   create(entry: CreateTravelHistoryRequest): Observable<TravelHistoryEntry> {
     return this.http.post<TravelHistoryEntry>(this.baseUrl, entry);
   }
+
+  update(id: string, entry: Partial<CreateTravelHistoryRequest>): Observable<TravelHistoryEntry> {
+    return this.http.put<TravelHistoryEntry>(`${this.baseUrl}/${id}`, entry);
+  }
 }
