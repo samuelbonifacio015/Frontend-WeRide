@@ -382,26 +382,28 @@ export class TripMap implements OnInit, OnDestroy {
   private async saveTravelHistoryEntry(): Promise<void> {
     const vehicle = this.tripStore.currentVehicle();
     const location = this.tripStore.currentLocation();
+    const tripDuration = this.elapsedTime();
+    const travelDistance = this.estimatedDistance().toFixed(2);
 
     if (!vehicle || !location) {
       console.warn('No se pudo registrar el historial de viaje: falta vehículo o ubicación actual');
       return;
     }
 
-    const user = await firstValueFrom(this.currentUserView.getCurrentUser$());
-    if (!user?.id) {
-      console.warn('No se pudo registrar el historial de viaje: usuario no autenticado');
-      return;
-    }
-
     try {
+      const user = await firstValueFrom(this.currentUserView.getCurrentUser$());
+      if (!user?.id) {
+        console.warn('No se pudo registrar el historial de viaje: usuario no autenticado');
+        return;
+      }
+
       await firstValueFrom(this.travelHistoryApi.create({
         userId: user.id.toString(),
         location: location.name,
         vehicle: `${vehicle.brand} ${vehicle.model}`,
         image: vehicle.image,
-        tripDuration: this.elapsedTime(),
-        travelDistance: this.estimatedDistance().toFixed(2)
+        tripDuration,
+        travelDistance
       }));
     } catch (error) {
       console.error('Error registrando historial de viaje:', error);

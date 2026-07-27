@@ -17,13 +17,6 @@ export class NotificationsApiEndpoint {
     return this.http.get<NotificationResponse[]>(`${this.baseUrl}?userId=${userId}`);
   }
 
-  // PENDIENTE backend: este filtro por query param no tiene efecto real
-  // — GET /notifications ya filtra por JWT sin importar el valor de
-  // userId, igual que getAll(). Sin callers hoy.
-  getByUserId(userId: string): Observable<NotificationResponse[]> {
-    return this.http.get<NotificationResponse[]>(`${this.baseUrl}?userId=${userId}`);
-  }
-
   // Crear una nueva notificación
   create(notification: Omit<NotificationResponse, 'id'>): Observable<NotificationResponse> {
     return this.http.post<NotificationResponse>(this.baseUrl, notification);
@@ -53,6 +46,6 @@ export class NotificationsApiEndpoint {
   // El backend real es PATCH /notifications/{id}/read, sin body, y
   // devuelve un string plano (no un NotificationResource).
   markAsRead(id: string): Observable<string> {
-    return this.http.patch<string>(`${this.baseUrl}/${id}/read`, null);
+    return this.http.patch(`${this.baseUrl}/${id}/read`, null, { responseType: 'text' });
   }
 }

@@ -35,6 +35,7 @@ describe('NotificationsApiEndpoint', () => {
     const req = httpMock.expectOne(`${baseUrl}/n1/read`);
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toBeNull();
+    expect(req.request.responseType).toBe('text');
     req.flush('Notification marked as read');
   });
 });
