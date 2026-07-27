@@ -18,6 +18,9 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import { ActiveBookingService } from '../../../../booking/application/active-booking.service';
 import { TripInitializerService } from '../../../application/trip-initializer.service';
+import { TravelHistoryApiEndpoint } from '../../../infrastructure/travel-history-api-endpoint';
+import { CurrentUserViewService } from '../../../../profile/application/current-user-view.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-trip-map',
@@ -37,6 +40,8 @@ export class TripMap implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private activeBookingService = inject(ActiveBookingService);
   private tripInitializer = inject(TripInitializerService);
+  private travelHistoryApi = inject(TravelHistoryApiEndpoint);
+  private currentUserView = inject(CurrentUserViewService);
 
   userLocation = signal<[number, number] | null>(null);
   markers: Array<{lng: number, lat: number}> = [];
@@ -359,6 +364,8 @@ export class TripMap implements OnInit, OnDestroy {
   endTrip() {
     const currentTrip = this.tripStore.currentTrip();
 
+    this.saveTravelHistoryEntry();
+
     // Open rate trip modal after ending trip
     this.openRateTripModal();
 
@@ -368,6 +375,37 @@ export class TripMap implements OnInit, OnDestroy {
     this.remainingTime.set('00:00:00');
     this.currentBattery.set(0);
     this.estimatedDistance.set(0);
+  }
+
+  // No bloquea el flujo de fin de viaje si falla — el rating y el reset
+  // del store deben ocurrir igual.
+  private async saveTravelHistoryEntry(): Promise<void> {
+    const vehicle = this.tripStore.currentVehicle();
+    const location = this.tripStore.currentLocation();
+
+    if (!vehicle || !location) {
+      console.warn('No se pudo registrar el historial de viaje: falta vehículo o ubicación actual');
+      return;
+    }
+
+    const user = await firstValueFrom(this.currentUserView.getCurrentUser$());
+    if (!user?.id) {
+      console.warn('No se pudo registrar el historial de viaje: usuario no autenticado');
+      return;
+    }
+
+    try {
+      await firstValueFrom(this.travelHistoryApi.create({
+        userId: user.id.toString(),
+        location: location.name,
+        vehicle: `${vehicle.brand} ${vehicle.model}`,
+        image: vehicle.image,
+        tripDuration: this.elapsedTime(),
+        travelDistance: this.estimatedDistance().toFixed(2)
+      }));
+    } catch (error) {
+      console.error('Error registrando historial de viaje:', error);
+    }
   }
 
   openReportProblemModal() {
