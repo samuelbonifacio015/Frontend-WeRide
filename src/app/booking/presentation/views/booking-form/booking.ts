@@ -12,6 +12,9 @@ import { BookingStorageService } from '../../../application/booking-storage.serv
 import { BookingStore } from '../../../application/booking.store';
 import { BookingsApiEndpoint } from '../../../infraestructure/bookings-api-endpoint';
 import { VehiclesApiEndpoint } from '../../../infraestructure/vehicles-api-endpoint';
+import { LocationsApiEndpoint } from '../../../infraestructure/locations-api-endpoint';
+import { LocationResponse } from '../../../infraestructure/locations-response';
+import { DraftBookingService } from '../../../application/draft-booking.service';
 
 @Component({
   selector: 'app-booking-form',
@@ -35,6 +38,8 @@ export class BookingFormComponent implements OnInit {
   private bookingStore = inject(BookingStore);
   private bookingsApi = inject(BookingsApiEndpoint);
   private vehiclesApi = inject(VehiclesApiEndpoint);
+  private locationsApi = inject(LocationsApiEndpoint);
+  private draftService = inject(DraftBookingService);
   private snackBar = inject(MatSnackBar);
   private translate = inject(TranslateService);
 
@@ -43,8 +48,11 @@ export class BookingFormComponent implements OnInit {
 
   // Array dinámico que se llena desde la API de Garage
   vehicles: any[] = [];
+  locations: LocationResponse[] = [];
 
   selectedVehicle: string = '';
+  startLocationId = '';
+  endLocationId = '';
   selectedDate: string = '';
   unlockTime: string = '';
   duration: number = 1;
@@ -62,6 +70,7 @@ export class BookingFormComponent implements OnInit {
 
     // 2. Cargar lista de vehículos
     this.loadVehicles();
+    this.loadLocations();
 
     // 3. Verificar si es modo edición
     this.route.paramMap.subscribe(params => {
@@ -69,7 +78,7 @@ export class BookingFormComponent implements OnInit {
       if (bookingId) {
         this.isEditMode = true;
         this.editingBookingId = bookingId;
-        setTimeout(() => this.loadBookingForEdit(bookingId), 500);
+        this.loadBookingForEdit(bookingId);
       }
     });
   }
@@ -89,25 +98,38 @@ export class BookingFormComponent implements OnInit {
     });
   }
 
+  private loadLocations(): void {
+    this.locationsApi.getAll().subscribe({
+      next: locations => {
+        this.locations = locations.filter(location => location.isActive);
+        this.startLocationId ||= this.locations[0]?.id || '';
+        this.endLocationId ||= this.locations[1]?.id || this.locations[0]?.id || '';
+      },
+      error: () => this.showErrorMessage('Error cargando la lista de ubicaciones')
+    });
+  }
+
   private loadBookingForEdit(bookingId: string): void {
     const booking = this.bookingStorage.getBookingById(bookingId);
 
     if (booking) {
-      this.selectedVehicle = booking.vehicleId;
-      this.selectedDate = this.formatDateForInput(booking.startDate);
-      this.unlockTime = this.formatTimeForInput(booking.startDate);
-      this.duration = booking.duration || 1;
-      this.updateRate();
+      this.applyBooking(booking);
     } else {
-      this.bookingsApi.getAll().subscribe(bookings => {
-        const found = bookings.find((b: any) => b.id === bookingId);
-        if(found) {
-          this.selectedVehicle = found.vehicleId;
-          this.duration = found.duration || 1;
-          this.updateRate();
-        }
+      this.bookingsApi.getById(bookingId).subscribe({
+        next: bookingResponse => this.applyBooking(bookingResponse),
+        error: () => this.showErrorMessage('booking.notFound')
       });
     }
+  }
+
+  private applyBooking(booking: any): void {
+    this.selectedVehicle = String(booking.vehicleId);
+    this.startLocationId = booking.startLocationId ? String(booking.startLocationId) : this.startLocationId;
+    this.endLocationId = booking.endLocationId ? String(booking.endLocationId) : this.endLocationId;
+    this.selectedDate = this.formatDateForInput(new Date(booking.startDate));
+    this.unlockTime = this.formatTimeForInput(new Date(booking.startDate));
+    this.duration = booking.duration || 1;
+    this.updateRate();
   }
 
   // --- LÓGICA DE FORMULARIO Y API ---
@@ -136,10 +158,9 @@ export class BookingFormComponent implements OnInit {
     // fijo contra el mock actual.
     // PAYLOAD COMPLETO (NECESARIO PARA PASAR LA VALIDACIÓN TS DEL FRONTEND)
     const payload: any = {
-      userId: '1',
-      vehicleId: this.selectedVehicle,
-      startLocationId: 'loc-A',
-      endLocationId: 'loc-B',
+      vehicleId: Number(this.selectedVehicle),
+      startLocationId: Number(this.startLocationId),
+      endLocationId: Number(this.endLocationId),
       reservedAt: new Date().toISOString(),
       startDate: startDateTime.toISOString(),
       endDate: new Date(startDateTime.getTime() + (this.duration * 60000)).toISOString(),
@@ -210,8 +231,24 @@ export class BookingFormComponent implements OnInit {
   }
 
   saveDraft() {
-    this.showSummary = true;
-    this.showSuccessMessage('Borrador guardado localmente (simulado)');
+    if (!this.selectedVehicle || !this.startLocationId || !this.endLocationId) {
+      this.showErrorMessage('Completa vehículo y ubicaciones antes de guardar');
+      return;
+    }
+    this.draftService.saveDraft({
+      vehicleId: this.selectedVehicle,
+      selectedDate: this.selectedDate,
+      unlockTime: this.unlockTime,
+      durationMinutes: this.duration,
+      startLocationId: this.startLocationId,
+      endLocationId: this.endLocationId,
+      smsReminder: this.smsReminder,
+      emailConfirmation: this.emailConfirmation,
+      pushNotification: this.pushNotification
+    }).subscribe({
+      next: () => { this.showSummary = true; this.showSuccessMessage('booking.draftSaved'); },
+      error: () => this.showErrorMessage('booking.draftSaveError')
+    });
   }
 
   // --- MÉTODOS AUXILIARES Y GETTERS ---
